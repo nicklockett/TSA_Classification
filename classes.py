@@ -198,6 +198,16 @@ class BodyScan(object):
         
         print('Done!')
 
+    def toe_to_head_sweep(self):
+        """
+        performs and visualizes toe_to_head sweep
+        """
+        data = self.img_data.transpose()
+        plt.ion()
+        for dslice in data:
+            plt.imshow(dslice, cmap="hot")
+            plt.pause(0.01)
+
     def get_single_image(self, nth_image):
         """
         Returns the nth image from the image stack
