@@ -204,9 +204,11 @@ class BodyScan(object):
         """
         data = self.img_data.transpose()
         plt.ion()
+        fig = plt.figure()
         for dslice in data:
+            plt.clf()
             plt.imshow(dslice, cmap="hot")
-            plt.pause(0.01)
+            fig.canvas.draw()
 
     def get_single_image(self, nth_image):
         """
