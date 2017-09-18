@@ -13,7 +13,7 @@
 
 
 import numpy as np
-import os
+import sys, os
 from os.path import splitext, basename, join, dirname, isdir
 import matplotlib
 # matplotlib.rc('animation', html='html5')
@@ -21,13 +21,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-
-im_fpath = "fdb996a779e5d65d043eaa160ec2f09f.aps"
+im_fpath = sys.argv[1]
 # im_fpath = "/data2/seg/data/a3d/0043db5e8c819bffc15261b1f1ac5e42.a3d"
 
 fname_id = splitext(basename(im_fpath))[0]
 ext_no_dot = splitext(basename(im_fpath))[1][1:]
-ani_file_out = join("output/", fname_id + "_" + ext_no_dot + ".mp4")
+ani_file_out = join(sys.argv[2], fname_id + "_" + ext_no_dot + ".mp4")
 
 
 def read_header(infile):
@@ -235,7 +234,7 @@ def main():
 
 	# Create the destination directory, if necessary
 	if not isdir(dirname(ani_file_out)):
-		os.makedirs(dirname(ani_file_out), exist_ok = True)
+		os.makedirs(dirname(ani_file_out))
 
 	if ext_no_dot == "aps" or ext_no_dot == "a3daps":
 		ani = plot_image_aps_or_a3daps(im_fpath)
