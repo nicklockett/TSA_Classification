@@ -198,6 +198,30 @@ class BodyScan(object):
         
         print('Done!')
 
+    def find_and_visualize_contours_for_slice(self, slice_number):
+        # Get initial slice and visualize it in grayscale
+        trans_data = self.img_data.transpose()
+
+        # (https://stackoverflow.com/questions/30249053/python-opencv-drawing-errors-after-manipulating-array-with-numpy)
+        trans_data_copy = trans_data.copy() #<-- look above for explanation
+        gray_im = self.convert_to_grayscale(trans_data_copy[slice_number])
+        plt.ion()
+        fig = plt.figure()
+        plt.imshow(gray_im)
+
+        # Use the grayscale image to feed into opencv
+        ret,thresh = cv2.threshold(gray_im, 127, 255, 0) # Can experiment with these boundry values
+        im2,contours,hierarchy = cv2.findContours(thresh, 1, 2)
+        cv2.drawContours(gray_im, contours, -1, (0,255,0), 3)
+
+        # Visualize the min enclosing circles around each of the contours
+        # that our function latches onto
+        for cnt in contours:
+            (x,y),radius = cv2.minEnclosingCircle(cnt)
+            center = (int(x),int(y))
+            radius = int(radius)
+            plt.imshow(cv2.circle(gray_im,center,radius,(0,255,0),2))
+
     def toe_to_head_sweep(self):
         """
         performs and visualizes toe_to_head sweep
