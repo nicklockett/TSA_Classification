@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
+import Queue
 
 from constants import *
 
@@ -16,6 +17,9 @@ class BodyScan(object):
     """
     Main class for body scan data.
     """
+    CONTOUR_THRESH_LB = 70
+    CONTOUR_THRESH_UB = 255
+
     def __init__(self, filepath):
         """
         Initializes the BodyScan object using the file specified. Accepts
@@ -198,6 +202,17 @@ class BodyScan(object):
         
         print('Done!')
 
+    def get_contours(self, img_slice):
+        """
+        Given a slice image in an R2 matrix,
+        returns an image with the contours.
+        """
+        gray_im = self.convert_to_grayscale(img_slice)
+        ret, thresh = cv2.threshold(gray_im, self.CONTOUR_THRESH_LB, self.CONTOUR_THRESH_UB, 0) # Can experiment with these boundry values
+        im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+
+        return im2, sorted(contours), hierarchy
+
     def find_and_visualize_contours_for_slice(self, slice_number):
         # Get initial slice and visualize it in grayscale
         trans_data = self.img_data.transpose()
@@ -209,9 +224,7 @@ class BodyScan(object):
         fig = plt.figure()
         plt.imshow(gray_im)
 
-        # Use the grayscale image to feed into opencv
-        ret,thresh = cv2.threshold(gray_im, 127, 255, 0) # Can experiment with these boundry values
-        im2,contours,hierarchy = cv2.findContours(thresh, 1, 2)
+        im2,contours,hierarchy = self.get_contours(trans_data_copy[slice_number])
         cv2.drawContours(gray_im, contours, -1, (0,255,0), 3)
 
         # Visualize the min enclosing circles around each of the contours
@@ -323,6 +336,129 @@ class BodyScan(object):
         
         image = image - PIXEL_MEAN
         return image
+
+    def find_nearest_point(self, point, image, num_tries=10000):
+        """
+        Given a tuple of point, finds kind of the nearest point on the image
+        that exists. By that i mean it goes around in squares
+        """
+        queue = Queue.Queue()
+
+        queue.put(point)
+
+        # xbound
+        xb = len(image) - 1
+
+        # ybound
+        yb = len(image[0]) - 1
+
+        # initialize visited matrix
+        visited = np.zeros((len(image), len(image[0]))) 
+
+        # if > num tries then returns none
+
+        count = 0
+        while not queue.empty():
+            count += 1
+            if count > num_tries:
+                return None
+            point = queue.get()
+            x = point[0]
+            y = point[1]
+
+            # add the next points to visit for q
+            if (x+1 <= xb) and not visited[x+1][y]:
+                queue.put((x+1, y))
+            if (x-1 >= 0) and not visited[x-1][y]:
+                queue.put((x-1, y))
+            if (y+1 <= yb) and not visited[x][y+1]:
+                queue.put((x, y+1))
+            if (y-1 >= 0) and not visited[x][y-1]:
+                queue.put((x, y-1))
+            
+            # visit current point
+            visited[x][y] = 1
+
+            if image[x][y]:
+                return (x, y)
+
+        # if we can't find a point, just return none.
+        return None
+
+    def find_nearest_point_from_contours(self, point, contours):
+        """
+        """
+        nearest_point = (9999,9999)
+        distance = 99999999
+        for pt in contours:
+            dist = self.get_distance(point, pt)
+            if dist < distance:
+                nearest_point = pt
+                distance = dist
+
+        if distance == 99999999:
+            return None
+        return nearest_point
+
+    def get_distance(self, pt1, pt2):
+        """
+        gets the distance between two points as tuples
+        """
+        return np.sqrt(np.power(pt1[0] - pt2[0], 2) + np.power(pt1[1] - pt2[1], 2))
+
+    def collapse_to_tuple_array(self, contour_list):
+        """
+        Takes a list of contours and collapes them to a tuple array
+        """
+        output = []
+        for m1 in contour_list:
+            for m2 in m1:
+                for m3 in m2:
+                    output.append((m3[0], m3[1]))
+
+        return sorted(output)
+
+    def get_continuity(self, slice_number, data_cube):
+        """
+        Given slice number and data cube, which is the 3d body scan
+        oriented the correct way, returns the continuity score
+        """
+        cur = data_cube[slice_number]
+
+        # only try to access if it exists
+        if slice_number < len(data_cube):
+            nex = data_cube[slice_number+1]
+        else:
+            # print "reached the end of the thing and nothing to compere to"
+            return 0
+
+        # get the images of contours
+        cur_contour_img, cur_contours, _ = self.get_contours(cur)
+        nex_contour_img, nex_contours, _ = self.get_contours(nex)
+
+        cur_contours = self.collapse_to_tuple_array(cur_contours)
+        nex_contours = self.collapse_to_tuple_array(nex_contours)
+
+        tot = 0.0
+        count = 0
+
+        k = 0
+
+        for l, k in cur_contours:
+            # nearest_point = self.find_nearest_point((k, l), nex_contour_img)
+            nearest_point = self.find_nearest_point_from_contours((k, l), nex_contours)
+            if nearest_point:
+                dist = self.get_distance((k, l), nearest_point)
+            else:
+                dist = None
+            if dist and dist >= 0:
+                tot += dist
+                count += 1
+
+        if count == 0:
+            count = float(0.001)
+
+        return tot / float(count)
 
 
 class SupervisedClassifier(object):
