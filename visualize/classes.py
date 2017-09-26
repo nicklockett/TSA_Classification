@@ -237,7 +237,7 @@ class BodyScan(object):
             region_matrices[i] = self.crop(img_data_trans, sector_crop_list[i])
 
         return region_matrices
-        ex
+        
     def convert_to_grayscale(self, img):
         """
         Converts an ATI scan to grayscale and returns an img
