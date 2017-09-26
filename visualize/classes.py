@@ -223,6 +223,21 @@ class BodyScan(object):
         
         return np.flipud(img[nth_image])
 
+    def extract_segment_blocks(self):
+        """
+        Returns a matrix for each body segment
+        """
+
+        region_matrices = {};
+        img = self.img_data
+        img_data_trans = img.transpose()
+
+        # iterate through each segment zone
+        for i in range(17):
+            region_matrices[i] = self.crop(img_data_trans, sector_crop_list[i])
+
+        return region_matrices
+        ex
     def convert_to_grayscale(self, img):
         """
         Converts an ATI scan to grayscale and returns an img
