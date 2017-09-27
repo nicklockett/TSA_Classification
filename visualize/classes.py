@@ -274,7 +274,7 @@ class BodyScan(object):
             region_matrices[i] = self.crop(img_data_trans, sector_crop_list[i])
 
         return region_matrices
-        ex
+        
     def convert_to_grayscale(self, img):
         """
         Converts an ATI scan to grayscale and returns an img
@@ -551,6 +551,19 @@ class SupervisedClassifier(object):
         threat_list = df.loc[df['Subject'] == subject_id]
         
         return threat_list
+
+    def get_specific_threat_list(self, subject_id):
+        df = pd.read_csv(self.labels_filepath)
+
+        zone_list = df.loc[df['Id'].str.contains(subject_id)]
+        zone_list_array = zone_list.values
+        threat_list = []
+        for item in zone_list_array:
+            zone = int((item[0].split('_'))[1][4:])
+            probability = item[1]
+            threat_list.append([zone, probability])
+        
+        return sorted(threat_list, key=lambda x: x[0])
 
 
 class SCPerceptron(SupervisedClassifier):
