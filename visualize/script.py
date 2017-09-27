@@ -1,7 +1,11 @@
 from classes import *
 from dataExtraction import *
 
-bs = BodyScan("../data/data/a3d/955af05d26da95acc4e7c9821989e7e0.a3d")
-bsg = BlockStreamGenerator(bs)
-vals = bsg.generateStream()
-print(vals)
+bs = BodyScan("../data/fdb996a779e5d65d043eaa160ec2f09f.a3d")
+sc = SupervisedClassifier('../../stage1_labels.csv')
+bsg = BlockStreamGenerator(bs, sc)
+block_list = bsg.generateStream()
+print(block_list[0]) 
+print(block_list[0].region)
+print(block_list[0].threat)
+print(block_list[0].n)
