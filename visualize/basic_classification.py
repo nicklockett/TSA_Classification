@@ -2,6 +2,7 @@ from classes import *
 from dataExtraction import *
 from random import shuffle
 from sklearn import svm, metrics
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 # need to ingest and iterate through multiple bodies
@@ -9,12 +10,15 @@ images_list = [
 	"../data/fdb996a779e5d65d043eaa160ec2f09f.a3d",
 	]
 
+### Formating Data ###
+
 # right now we're just throwing all the blocks from all images into the same list which is fed to the classifier
 uniform_blocks = []
+sc = SupervisedClassifier('../../stage1_labels.csv')
+
 for file_path in images_list:
 
 	bs = BodyScan(file_path)
-	sc = SupervisedClassifier('../../stage1_labels.csv')
 	bsg = BlockStreamGenerator(bs, sc)
 	block_list = bsg.generateStream()
 
@@ -58,6 +62,7 @@ final_labels_test = []
 for block in test_data:
 	final_labels_test.append(block.threat)
 
+
 ### SVM ###
 print("--- SVM Output ---")
 
@@ -75,6 +80,22 @@ predicted = classifier.predict(final_data_test)
 print("Classification report for classifier %s:\n%s\n"
       % (classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
+
+
+### PCA ###
+print("--- PCA Output ---")
+
+print(len(final_data_test + final_data_train))
+pca = PCA(n_components=3)
+pca.fit(final_data_test + final_data_train)
+
+print(pca.components_.shape)
+print("Explained variance per component:")
+print(pca.explained_variance_ratio_)  
+
+# plot first (x) and second (y) components
+plt.scatter(pca.components_[0], pca.components_[1])
+plt.show()
 
 
 
