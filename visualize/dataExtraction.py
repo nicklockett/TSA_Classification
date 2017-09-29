@@ -27,18 +27,19 @@ class BlockStreamGenerator:
 				for z in range(0, len(body_segment_matrix[b][x]), self.shift):
 					for y in range(0, len(body_segment_matrix[b][x][z])):
 						if body_segment_matrix[b][x][z][y] >= self.threshold:
-							results.append(Block( body_segment_matrix[b][ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], b, threats[b][1], self.blockSize))
+							results.append(Block( body_segment_matrix[b][ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], b, threats[b][1], individual_name, self.blockSize))
 							break
 					for y in range(len(body_segment_matrix[b][x][z])-1, 0, -1):
 						if(body_segment_matrix[b][x][z][y] >= self.threshold):
-							results.append(Block( body_segment_matrix[b][ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], b, threats[b][1], self.blockSize))
+							results.append(Block( body_segment_matrix[b][ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], b, threats[b][1], individual_name, self.blockSize))
 							break
 		return results
 
 
 class Block:
-	def __init__(self, data, region, threat, n):
+	def __init__(self, data, region, threat, name, n):
 		self.data = data
 		self.region = region
 		self.threat = threat
+		self.name = name
 		self.n = n
