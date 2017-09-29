@@ -468,7 +468,7 @@ class DeepCNN(SupervisedClassifier):
             sess.run(tf.global_variables_initializer())
             i = 0
             for batch in batch_in:
-                if not batch.data:
+                if not batch.data.all():
                     continue
                 if batch.data.shape != (8, 8, 8):
                     continue
