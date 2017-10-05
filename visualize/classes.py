@@ -2,15 +2,31 @@ from __future__ import print_function
 from __future__ import division
 from abc import ABCMeta
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import numpy as np
+import itertools
 import os
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
-#import tensorflow as tf
+# import tensorflow as tf
 
 from constants import *
+
+class Block:
+    def __init__(self, data, coords, threat=0):
+        self.data = data
+        self.coords = coords
+        self.threat = threat
+
+    def __eq__ (self, other):
+        return self.coords[0] == other.coords[0] and \
+                self.coords[1] == other.coords[1] and \
+                self.coords[2] == other.coords[2]
+
+    def __hash__(self):
+        return self.coords[0] + self.coords[1]*1000 + self.coords[2]*1000*1000
 
 
 class BodyScan(object):
@@ -35,7 +51,7 @@ class BodyScan(object):
 
         # declare dictionary
         h = dict()
-        
+
         # read the aps file
         with open(infile, 'r+b') as fid:
             h['filename'] = b''.join(np.fromfile(fid, dtype = 'S1', count = 20))
@@ -140,10 +156,10 @@ class BodyScan(object):
 
         with open(infile, 'rb') as fid:
             # skip the header
-            fid.seek(512) 
+            fid.seek(512)
 
             # handle .aps and .a3aps files
-            # word_type == 7 is an np.float32, word_type == 4 is np.uint16    
+            # word_type == 7 is an np.float32, word_type == 4 is np.uint16
             if extension == '.aps' or extension == '.a3daps':
                 if(h['word_type']==7):
                     data = np.fromfile(fid, dtype=np.float32, count=nx * ny * nt)
@@ -158,7 +174,6 @@ class BodyScan(object):
             elif extension == '.a3d':
                 if(h['word_type']==7):
                     data = np.fromfile(fid, dtype=np.float32, count=nx * ny * nt)
-                    
                 elif(h['word_type']==4):
                     data = np.fromfile(fid, dtype=np.uint16, count=nx * ny * nt)
                 # scale and reshape the data
@@ -183,20 +198,18 @@ class BodyScan(object):
         """
         # read in the aps file, it comes in as shape(512, 620, 16)
         img = self.img_data
-        
+
         # transpose so that the slice is the first dimension shape(16, 620, 512)
         img = img.transpose()
-            
+
         # show the graphs
         fig, axarr = plt.subplots(nrows=4, ncols=4, figsize=(10,10))
-        
         i = 0
         for row in range(4):
             for col in range(4):
                 resized_img = cv2.resize(img[i], (0,0), fx=0.1, fy=0.1)
                 axarr[row, col].imshow(np.flipud(resized_img), cmap=COLORMAP)
                 i += 1
-        
         print('Done!')
 
     def toe_to_head_sweep(self):
@@ -218,27 +231,26 @@ class BodyScan(object):
 
         # read in the aps file, it comes in as shape(512, 620, 16)
         img = self.img_data
-        
+
         # transpose so that the slice is the first dimension shape(16, 620, 512)
         img = img.transpose()
-        
+
         return np.flipud(img[nth_image])
 
     def extract_segment_blocks(self):
         """
         Returns a matrix for each body segment
         """
-
-        region_matrices = {};
+        region_matrices = []
         img = self.img_data
         img_data_trans = img.transpose()
 
         # iterate through each segment zone
         for i in range(17):
-            region_matrices[i] = self.crop(img_data_trans, sector_crop_list[i])
+            region_matrices.append(self.crop(img_data_trans, sector_crop_list[i]))
 
         return region_matrices
-        
+
     def convert_to_grayscale(self, img):
         """
         Converts an ATI scan to grayscale and returns an img
@@ -255,11 +267,11 @@ class BodyScan(object):
         Applies a histogram equalization transformation and returns a transformed scan.
         """
         img = stats.threshold(img, threshmin=12, newval=0)
-        
+
         # see http://docs.opencv.org/3.1.0/d5/daf/tutorial_py_histogram_equalization.html
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         img= clahe.apply(img)
-        
+
         return img
 
     def roi(self, img, vertices):
@@ -267,7 +279,7 @@ class BodyScan(object):
         uses vertices to mask the image. Verticies include a set of vertices
         that define the region of interest. It returns the masked image.
         """
-        
+
         # blank mask
         mask = np.zeros_like(img)
 
@@ -290,7 +302,7 @@ class BodyScan(object):
         width = crop_list[2]
         height = crop_list[3]
         cropped_img = img[x_coord:x_coord+width, y_coord:y_coord+height]
-        
+
         return cropped_img
 
     def normalize(self, image):
@@ -300,7 +312,7 @@ class BodyScan(object):
         """
         MIN_BOUND = 0.0
         MAX_BOUND = 255.0
-        
+
         image = (image - MIN_BOUND) / (MAX_BOUND - MIN_BOUND)
         image[image>1] = 1.
         image[image<0] = 0.
@@ -312,9 +324,128 @@ class BodyScan(object):
         entered at the PIXEL_MEAN and returns a zero centered image
         """
         PIXEL_MEAN = 0.014327
-        
+
         image = image - PIXEL_MEAN
         return image
+
+    def extract_blocks_from_segment(self, segment_number, threshold=1e-03, block_size=8):
+        """
+        Returns an array of blocks generated around the surface of the
+        body in the specified segment
+        """
+        segments = self.extract_segment_blocks()
+
+        return self.generate_blocks(segments[segment_number], threshold, block_size)
+
+    def generate_blocks(self, body_segment_matrix, threshold, block_size):
+        """
+        Generates blocks from a cropped segment
+        """
+        bsm = body_segment_matrix
+        n = block_size
+        ds = int(n / 2)
+
+        output = set()
+        for x in range(ds, len(bsm)-ds, ds):
+            lb = ds
+            ub = len(bsm[x][ds]-ds-1)
+            prev_y1 = ds
+            prev_y2 = len(bsm[x][ds]-ds-1)
+            for z in range(ds, len(bsm[x])-ds, ds):
+                c = 0
+                # just ping pong from prev_y out
+                for y in range(lb, ub, ds):
+                    av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    if av >= threshold:
+                        data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
+                        coords = (x, z, y)
+                        block = Block(data, coords)
+                        output.add(block)
+                        break
+                for y in range(ub, lb, -ds):
+                    av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    if av >= threshold:
+                        data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
+                        coords = (x, z, y)
+                        block = Block(data, coords)
+                        output.add(block)
+                        break
+
+        return output
+
+    def plot_3d_from_blocks(self, blocks):
+        """
+        plots 3d of the blocks.
+        """
+        x = []
+        y = []
+        z = []
+        c = []
+        for bl in blocks:
+            x.append(bl.coords[0])
+            y.append(bl.coords[1])
+            z.append(bl.coords[2])
+            c.append(np.average(bl.data))
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, c=c, cmap=plt.hot())
+
+        plt.show()
+
+    def stochastic_gradient_descent(self, data, dim=2, n=3, alpha=1e-4, max_iter=100, thresh=10, chunk=5):
+        # initialize variables
+        tot_n = np.power((n + 1), dim)
+        weights = np.ones(tot_n) / tot_n
+        c_list = []
+        alphas = np.array([])
+        data_shape = data.shape
+
+        # initialize c_list
+        pools = itertools.product(range(n+1), repeat=dim)
+        for k in pools:
+            c_list.append(np.array(k))
+
+        for c in c_list:
+            alph = np.linalg.norm(c)
+            if alph == 0:
+                alph = alpha
+            else:
+                alph = alpha / alph
+            alphas = np.append(alphas, alph)
+
+        # descend!
+        counter = 0
+        error = 100.0
+
+        while (counter < max_iter and error > thresh):
+            error = 0.0
+            for index, s in np.ndenumerate(data):
+                if (np.array(index) % chunk).any():
+                    continue
+                phis = np.array([])
+                x = np.ones(dim)
+                # normalizing x to 0 < x < 1
+                for l in range(dim):
+                    x[l] = float(index[l]) / data_shape[l]
+                for c in c_list:
+                    ret = self.phi(x, c)
+                    phis = np.append(phis, ret)
+
+                cur_error = np.dot(weights, phis) - s
+                error += np.power(cur_error, 2) / data.size
+                weights = weights - phis * alphas * cur_error
+            counter += 1
+            print("cur weight:", weights)
+            print("cur error: ", error)
+
+        return weights, c_list
+
+    def phi(self, x, c):
+        """
+        returns phi. x must be in [-1, 1]
+        """
+        return np.cos(np.pi * np.dot(x, c))
 
 
 class SupervisedClassifier(object):
