@@ -328,16 +328,16 @@ class BodyScan(object):
         image = image - PIXEL_MEAN
         return image
 
-    def extract_blocks_from_segment(self, segment_number, threshold=1e-03, block_size=8):
+    def extract_blocks_from_segment(self, segment_number, threshold=1e-03, block_size=8, shift=1):
         """
         Returns an array of blocks generated around the surface of the
         body in the specified segment
         """
         segments = self.extract_segment_blocks()
 
-        return self.generate_blocks(segments[segment_number], threshold, block_size)
+        return self.generate_blocks(segments[segment_number], threshold, block_size, shift)
 
-    def generate_blocks(self, body_segment_matrix, threshold, block_size):
+    def generate_blocks(self, body_segment_matrix, threshold, block_size, shift):
         """
         Generates blocks from a cropped segment
         """
@@ -346,30 +346,17 @@ class BodyScan(object):
         ds = int(n / 2)
 
         output = set()
-        for x in range(ds, len(bsm)-ds, ds):
+        for x in range(ds, len(bsm)-ds, shift):
             lb = ds
             ub = len(bsm[x][ds]-ds-1)
-            prev_y1 = ds
-            prev_y2 = len(bsm[x][ds]-ds-1)
-            for z in range(ds, len(bsm[x])-ds, ds):
-                c = 0
-                # just ping pong from prev_y out
-                for y in range(lb, ub, ds):
+            for z in range(ds, len(bsm[x])-ds, shift):
+                for y in range(lb, ub, shift):
                     av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
                     if av >= threshold:
                         data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
                         coords = (x, z, y)
                         block = Block(data, coords)
                         output.add(block)
-                        break
-                for y in range(ub, lb, -ds):
-                    av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
-                    if av >= threshold:
-                        data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
-                        coords = (x, z, y)
-                        block = Block(data, coords)
-                        output.add(block)
-                        break
 
         return output
 
