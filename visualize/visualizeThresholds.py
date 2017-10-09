@@ -14,7 +14,7 @@ class ThresholdVisualizer:
 		self.scanId = scanId
 
 	def OtsuThresholding(self , data):
-		""" Plot Otsu Threshold and return threshold value"""
+		""" Plot Otsu Threshold and return threshold value for a 2D image"""
 
 		val = filters.threshold_otsu(data)
 
@@ -94,6 +94,42 @@ class ThresholdVisualizer:
 
 		#self.OtsuThresholding(data)
 		#for segment in segments:
+
+	def FullRegionHistogram2D(self):
+
+			segments = self.bs.extract_segment_blocks()
+		
+			fig, axarr = plt.subplots(nrows=5, ncols=4, figsize=(10,5))
+			fig_image, axarr_image = plt.subplots(nrows=5, ncols=4, figsize=(10,5))
+
+			i = 0
+
+			threatList = self.sc.get_specific_threat_list(self.scanId)
+
+			for row in range(5):
+				for col in range(4):
+					if(i<17):
+						data3D = segments[i]
+						data2D = self.bs.compress_along_x_y(segments[i])
+						hist, bins_center = exposure.histogram(data2D)
+
+						#print 'hist: ', hist
+						#print 'bins_center: ', bins_center
+						#hist, bins_center = exposure.equalize_adapthist(data)
+						# Plot the histograms according to whether or not the region is a threat
+						if(threatList[i][1]==1):
+							axarr[row, col].plot(bins_center, hist, lw = 2, color = 'red')
+						else:
+							axarr[row, col].plot(bins_center, hist, lw = 2, color = 'blue')
+
+						axarr[row, col].set_title('Region ' + str(i+1))
+
+						axarr_image[row,col].imshow(data2D)
+						axarr_image[row,col].set_title('Region ' + str(i+1))
+						i += 1
+						print 'Done with region ', str(i), '!'
+
+			plt.show()
 
 	def RemoveBackground(self,data3D, threshold):
 

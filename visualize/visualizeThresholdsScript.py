@@ -12,8 +12,12 @@ sc = SupervisedClassifier('../../stage1_labels.csv')
 tv = ThresholdVisualizer(bs, sc, scanId)
 threatList = sc.get_specific_threat_list(scanId)
 print "Threats: \n", threatList
+#body_data = bs.compress_from_front(bs.img_data)
 
+#threshold1 = tv.OtsuThresholding(body_data)
+tv.FullRegionHistogram2D()
+#bs.extract_segment_blocks()
 #tv.FullRegionThresholding()
-tv.NoBackgroundRegionHistogram()
+#tv.NoBackgroundRegionHistogram()
 #bsg = BlockStreamGenerator(bs, sc)
 #block_list = bsg.generateStream()

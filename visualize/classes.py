@@ -251,9 +251,9 @@ class BodyScan(object):
 
         return f
 
-    def compress_from_front(self):
-        full_data = self.img_data
-        print(self.img_data.shape)
+
+    def compress_along_y_z(self, full_data):
+        print(full_data.shape)
 
         matrix2D = np.zeros((full_data.shape[2],full_data.shape[1]))
         print (matrix2D.shape)
@@ -267,11 +267,24 @@ class BodyScan(object):
 
         print(matrix2D.shape)
 
-        plt.ion()
-        fig = plt.figure()
-        plt.imshow(matrix2D)
+        return matrix2D
 
-        return fig
+    def compress_along_x_y(self, full_data):
+        print(full_data.shape)
+
+        matrix2D = np.zeros((full_data.shape[0],full_data.shape[1]))
+        print (matrix2D.shape)
+
+        for x in range(0, len(full_data)):
+            for y in range(0, len(full_data[0])):
+                value_sum = 0
+                for z in range(0, len(full_data[0][0])):
+                    value_sum += full_data[x][y][z]
+                matrix2D[x][y] = value_sum
+
+        print(matrix2D.shape)
+
+        return matrix2D
 
     def toe_to_head_sweep(self):
         """
@@ -305,6 +318,8 @@ class BodyScan(object):
         region_matrices = []
         img = self.img_data
         img_data_trans = img.transpose()
+        img_data_trans = np.swapaxes(img_data_trans,1,2)
+        img_data_trans = np.flip(img_data_trans, 0)
 
         # iterate through each segment zone
         for i in range(17):

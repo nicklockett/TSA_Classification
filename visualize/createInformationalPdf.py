@@ -23,7 +23,10 @@ for scanId in scanIds:
 			threatString += ', '
 
 	# Plot the body image
-	body_fig = bs.compress_from_front()
+	body_data = bs.compress_along_y_z(bs.img_data)
+	plt.ion()
+	body_fig = plt.figure()
+	plt.imshow(body_data)
 	body_fig.suptitle(scanId)
 	body_fig.text(.5,.5,threatString)
 	pdf.savefig(body_fig)
