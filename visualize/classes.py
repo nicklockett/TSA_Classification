@@ -223,8 +223,7 @@ class BodyScan(object):
         gray_im = self.convert_to_grayscale(img_slice)
         ret, thresh = cv2.threshold(gray_im, self.CONTOUR_THRESH_LB, self.CONTOUR_THRESH_UB, 0) # Can experiment with these boundry values
         im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
-
-        return im2, sorted(contours), hierarchy
+        return im2, contours, hierarchy
 
     def find_and_visualize_contours_for_slice(self, slice_number):
         # Get initial slice and visualize it in grayscale
@@ -234,8 +233,10 @@ class BodyScan(object):
         trans_data_copy = trans_data.copy() #<-- look above for explanation
         gray_im = self.convert_to_grayscale(trans_data_copy[slice_number])
         plt.ion()
-        fig = plt.figure()
-        plt.imshow(gray_im)
+        f, (ax1, ax2) = plt.subplots(1, 2)
+
+        ax1.imshow(gray_im)
+        ax2.imshow(gray_im)
 
         im2,contours,hierarchy = self.get_contours(trans_data_copy[slice_number])
         cv2.drawContours(gray_im, contours, -1, (0,255,0), 3)
@@ -246,7 +247,31 @@ class BodyScan(object):
             (x,y),radius = cv2.minEnclosingCircle(cnt)
             center = (int(x),int(y))
             radius = int(radius)
-            plt.imshow(cv2.circle(gray_im,center,radius,(0,255,0),2))
+            ax2.imshow(cv2.circle(gray_im,center,radius,(0,255,0),2))
+
+        return f
+
+    def compress_from_front(self):
+        full_data = self.img_data
+        print(self.img_data.shape)
+
+        matrix2D = np.zeros((full_data.shape[2],full_data.shape[1]))
+        print (matrix2D.shape)
+
+        for x in range(0, len(full_data)):
+            for z in range(0, len(full_data[0][0])):
+                value_sum = 0
+                for y in range(0, len(full_data[0])):
+                    value_sum += full_data[x][y][z]
+                matrix2D[len(full_data[0][0])-1-z][x] = value_sum
+
+        print(matrix2D.shape)
+
+        plt.ion()
+        fig = plt.figure()
+        plt.imshow(matrix2D)
+
+        return fig
 
     def toe_to_head_sweep(self):
         """
@@ -364,7 +389,6 @@ class BodyScan(object):
         image = image - PIXEL_MEAN
         return image
 
-<<<<<<< HEAD
     def find_nearest_point(self, point, image, num_tries=10000):
         """
         Given a tuple of point, finds kind of the nearest point on the image
@@ -487,7 +511,7 @@ class BodyScan(object):
             count = float(0.001)
 
         return tot / float(count)
-=======
+
     def extract_blocks_from_segment(self, segment_number, threshold=1e-03, block_size=8, shift=1):
         """
         Returns an array of blocks generated around the surface of the
@@ -593,7 +617,6 @@ class BodyScan(object):
         returns phi. x must be in [-1, 1]
         """
         return np.cos(np.pi * np.dot(x, c))
->>>>>>> 6f727471ee3a1a0efdfa7044bfd3f044036fbe04
 
 
 class SupervisedClassifier(object):
