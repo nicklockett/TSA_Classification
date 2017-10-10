@@ -10,7 +10,6 @@ import os
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
-import Queue
 
 from constants import *
 
@@ -250,7 +249,6 @@ class BodyScan(object):
             ax2.imshow(cv2.circle(gray_im,center,radius,(0,255,0),2))
 
         return f
-
 
     def compress_along_y_z(self, full_data):
         print(full_data.shape)
@@ -536,26 +534,32 @@ class BodyScan(object):
 
         return self.generate_blocks(segments[segment_number], threshold, block_size, shift)
 
-    def generate_blocks(self, body_segment_matrix, threshold, block_size, shift):
+    def generate_blocks(self, body_segment_matrix=None, threshold=1e-04, block_size=8, shift=8, use_max=True):
         """
         Generates blocks from a cropped segment
         """
+        if not body_segment_matrix:
+            body_segment_matrix = self.img_data
+
         bsm = body_segment_matrix
         n = block_size
         ds = int(n / 2)
 
-        output = set()
+        output = []
         for x in range(ds, len(bsm)-ds, shift):
             lb = ds
             ub = len(bsm[x][ds]-ds-1)
             for z in range(ds, len(bsm[x])-ds, shift):
                 for y in range(lb, ub, shift):
-                    av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    if not use_max:
+                        av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    else:
+                        av = np.max(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
                     if av >= threshold:
                         data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
                         coords = (x, z, y)
                         block = Block(data, coords)
-                        output.add(block)
+                        output.append(block)
 
         return output
 
@@ -576,6 +580,11 @@ class BodyScan(object):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(x, y, z, c=c, cmap=plt.hot())
+
+        axes = plt.gca()
+        axes.set_xlim([0,512])
+        axes.set_ylim([0,512])
+        axes.set_zlim([0,660])
 
         plt.show()
 
