@@ -2,21 +2,39 @@ from __future__ import print_function
 from __future__ import division
 from abc import ABCMeta
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import numpy as np
+import itertools
 import os
 import pandas as pd
 import scipy.stats as stats
 import seaborn as sns
-#import tensorflow as tf
 
 from constants import *
+
+class Block:
+    def __init__(self, data, coords, threat=0):
+        self.data = data
+        self.coords = coords
+        self.threat = threat
+
+    def __eq__ (self, other):
+        return self.coords[0] == other.coords[0] and \
+                self.coords[1] == other.coords[1] and \
+                self.coords[2] == other.coords[2]
+
+    def __hash__(self):
+        return self.coords[0] + self.coords[1]*1000 + self.coords[2]*1000*1000
 
 
 class BodyScan(object):
     """
     Main class for body scan data.
     """
+    CONTOUR_THRESH_LB = 70
+    CONTOUR_THRESH_UB = 255
+
     def __init__(self, filepath):
         """
         Initializes the BodyScan object using the file specified. Accepts
@@ -35,7 +53,7 @@ class BodyScan(object):
 
         # declare dictionary
         h = dict()
-        
+
         # read the aps file
         with open(infile, 'r+b') as fid:
             h['filename'] = b''.join(np.fromfile(fid, dtype = 'S1', count = 20))
@@ -140,10 +158,10 @@ class BodyScan(object):
 
         with open(infile, 'rb') as fid:
             # skip the header
-            fid.seek(512) 
+            fid.seek(512)
 
             # handle .aps and .a3aps files
-            # word_type == 7 is an np.float32, word_type == 4 is np.uint16    
+            # word_type == 7 is an np.float32, word_type == 4 is np.uint16
             if extension == '.aps' or extension == '.a3daps':
                 if(h['word_type']==7):
                     data = np.fromfile(fid, dtype=np.float32, count=nx * ny * nt)
@@ -158,7 +176,6 @@ class BodyScan(object):
             elif extension == '.a3d':
                 if(h['word_type']==7):
                     data = np.fromfile(fid, dtype=np.float32, count=nx * ny * nt)
-                    
                 elif(h['word_type']==4):
                     data = np.fromfile(fid, dtype=np.uint16, count=nx * ny * nt)
                 # scale and reshape the data
@@ -183,21 +200,89 @@ class BodyScan(object):
         """
         # read in the aps file, it comes in as shape(512, 620, 16)
         img = self.img_data
-        
+
         # transpose so that the slice is the first dimension shape(16, 620, 512)
         img = img.transpose()
-            
+
         # show the graphs
         fig, axarr = plt.subplots(nrows=4, ncols=4, figsize=(10,10))
-        
         i = 0
         for row in range(4):
             for col in range(4):
                 resized_img = cv2.resize(img[i], (0,0), fx=0.1, fy=0.1)
                 axarr[row, col].imshow(np.flipud(resized_img), cmap=COLORMAP)
                 i += 1
-        
         print('Done!')
+
+    def get_contours(self, img_slice):
+        """
+        Given a slice image in an R2 matrix,
+        returns an image with the contours.
+        """
+        gray_im = self.convert_to_grayscale(img_slice)
+        ret, thresh = cv2.threshold(gray_im, self.CONTOUR_THRESH_LB, self.CONTOUR_THRESH_UB, 0) # Can experiment with these boundry values
+        im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+        return im2, contours, hierarchy
+
+    def find_and_visualize_contours_for_slice(self, slice_number):
+        # Get initial slice and visualize it in grayscale
+        trans_data = self.img_data.transpose()
+
+        # (https://stackoverflow.com/questions/30249053/python-opencv-drawing-errors-after-manipulating-array-with-numpy)
+        trans_data_copy = trans_data.copy() #<-- look above for explanation
+        gray_im = self.convert_to_grayscale(trans_data_copy[slice_number])
+        plt.ion()
+        f, (ax1, ax2) = plt.subplots(1, 2)
+
+        ax1.imshow(gray_im)
+        ax2.imshow(gray_im)
+
+        im2,contours,hierarchy = self.get_contours(trans_data_copy[slice_number])
+        cv2.drawContours(gray_im, contours, -1, (0,255,0), 3)
+
+        # Visualize the min enclosing circles around each of the contours
+        # that our function latches onto
+        for cnt in contours:
+            (x,y),radius = cv2.minEnclosingCircle(cnt)
+            center = (int(x),int(y))
+            radius = int(radius)
+            ax2.imshow(cv2.circle(gray_im,center,radius,(0,255,0),2))
+
+        return f
+
+    def compress_along_y_z(self, full_data):
+        print(full_data.shape)
+
+        matrix2D = np.zeros((full_data.shape[2],full_data.shape[1]))
+        print (matrix2D.shape)
+
+        for x in range(0, len(full_data)):
+            for z in range(0, len(full_data[0][0])):
+                value_sum = 0
+                for y in range(0, len(full_data[0])):
+                    value_sum += full_data[x][y][z]
+                matrix2D[len(full_data[0][0])-1-z][x] = value_sum
+
+        print(matrix2D.shape)
+
+        return matrix2D
+
+    def compress_along_x_y(self, full_data):
+        print(full_data.shape)
+
+        matrix2D = np.zeros((full_data.shape[0],full_data.shape[1]))
+        print (matrix2D.shape)
+
+        for x in range(0, len(full_data)):
+            for y in range(0, len(full_data[0])):
+                value_sum = 0
+                for z in range(0, len(full_data[0][0])):
+                    value_sum += full_data[x][y][z]
+                matrix2D[x][y] = value_sum
+
+        print(matrix2D.shape)
+
+        return matrix2D
 
     def toe_to_head_sweep(self):
         """
@@ -218,27 +303,28 @@ class BodyScan(object):
 
         # read in the aps file, it comes in as shape(512, 620, 16)
         img = self.img_data
-        
+
         # transpose so that the slice is the first dimension shape(16, 620, 512)
         img = img.transpose()
-        
+
         return np.flipud(img[nth_image])
 
     def extract_segment_blocks(self):
         """
         Returns a matrix for each body segment
         """
-
-        region_matrices = {};
+        region_matrices = []
         img = self.img_data
         img_data_trans = img.transpose()
+        img_data_trans = np.swapaxes(img_data_trans,1,2)
+        img_data_trans = np.flip(img_data_trans, 0)
 
         # iterate through each segment zone
         for i in range(17):
-            region_matrices[i] = self.crop(img_data_trans, sector_crop_list[i])
+            region_matrices.append(self.crop(img_data_trans, sector_crop_list[i]))
 
         return region_matrices
-        
+
     def convert_to_grayscale(self, img):
         """
         Converts an ATI scan to grayscale and returns an img
@@ -255,11 +341,11 @@ class BodyScan(object):
         Applies a histogram equalization transformation and returns a transformed scan.
         """
         img = stats.threshold(img, threshmin=12, newval=0)
-        
+
         # see http://docs.opencv.org/3.1.0/d5/daf/tutorial_py_histogram_equalization.html
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         img= clahe.apply(img)
-        
+
         return img
 
     def roi(self, img, vertices):
@@ -267,7 +353,7 @@ class BodyScan(object):
         uses vertices to mask the image. Verticies include a set of vertices
         that define the region of interest. It returns the masked image.
         """
-        
+
         # blank mask
         mask = np.zeros_like(img)
 
@@ -290,7 +376,7 @@ class BodyScan(object):
         width = crop_list[2]
         height = crop_list[3]
         cropped_img = img[x_coord:x_coord+width, y_coord:y_coord+height]
-        
+
         return cropped_img
 
     def normalize(self, image):
@@ -300,7 +386,7 @@ class BodyScan(object):
         """
         MIN_BOUND = 0.0
         MAX_BOUND = 255.0
-        
+
         image = (image - MIN_BOUND) / (MAX_BOUND - MIN_BOUND)
         image[image>1] = 1.
         image[image<0] = 0.
@@ -312,9 +398,249 @@ class BodyScan(object):
         entered at the PIXEL_MEAN and returns a zero centered image
         """
         PIXEL_MEAN = 0.014327
-        
+
         image = image - PIXEL_MEAN
         return image
+
+    def find_nearest_point(self, point, image, num_tries=10000):
+        """
+        Given a tuple of point, finds kind of the nearest point on the image
+        that exists. By that i mean it goes around in squares
+        """
+        queue = Queue.Queue()
+
+        queue.put(point)
+
+        # xbound
+        xb = len(image) - 1
+
+        # ybound
+        yb = len(image[0]) - 1
+
+        # initialize visited matrix
+        visited = np.zeros((len(image), len(image[0]))) 
+
+        # if > num tries then returns none
+
+        count = 0
+        while not queue.empty():
+            count += 1
+            if count > num_tries:
+                return None
+            point = queue.get()
+            x = point[0]
+            y = point[1]
+
+            # add the next points to visit for q
+            if (x+1 <= xb) and not visited[x+1][y]:
+                queue.put((x+1, y))
+            if (x-1 >= 0) and not visited[x-1][y]:
+                queue.put((x-1, y))
+            if (y+1 <= yb) and not visited[x][y+1]:
+                queue.put((x, y+1))
+            if (y-1 >= 0) and not visited[x][y-1]:
+                queue.put((x, y-1))
+            
+            # visit current point
+            visited[x][y] = 1
+
+            if image[x][y]:
+                return (x, y)
+
+        # if we can't find a point, just return none.
+        return None
+
+    def find_nearest_point_from_contours(self, point, contours):
+        """
+        """
+        nearest_point = (9999,9999)
+        distance = 99999999
+        for pt in contours:
+            dist = self.get_distance(point, pt)
+            if dist < distance:
+                nearest_point = pt
+                distance = dist
+
+        if distance == 99999999:
+            return None
+        return nearest_point
+
+    def get_distance(self, pt1, pt2):
+        """
+        gets the distance between two points as tuples
+        """
+        return np.sqrt(np.power(pt1[0] - pt2[0], 2) + np.power(pt1[1] - pt2[1], 2))
+
+    def collapse_to_tuple_array(self, contour_list):
+        """
+        Takes a list of contours and collapes them to a tuple array
+        """
+        output = []
+        for m1 in contour_list:
+            for m2 in m1:
+                for m3 in m2:
+                    output.append((m3[0], m3[1]))
+
+        return sorted(output)
+
+    def get_continuity(self, slice_number, data_cube):
+        """
+        Given slice number and data cube, which is the 3d body scan
+        oriented the correct way, returns the continuity score
+        """
+        cur = data_cube[slice_number]
+
+        # only try to access if it exists
+        if slice_number < len(data_cube):
+            nex = data_cube[slice_number+1]
+        else:
+            # print "reached the end of the thing and nothing to compere to"
+            return 0
+
+        # get the images of contours
+        cur_contour_img, cur_contours, _ = self.get_contours(cur)
+        nex_contour_img, nex_contours, _ = self.get_contours(nex)
+
+        cur_contours = self.collapse_to_tuple_array(cur_contours)
+        nex_contours = self.collapse_to_tuple_array(nex_contours)
+
+        tot = 0.0
+        count = 0
+
+        k = 0
+
+        for l, k in cur_contours:
+            # nearest_point = self.find_nearest_point((k, l), nex_contour_img)
+            nearest_point = self.find_nearest_point_from_contours((k, l), nex_contours)
+            if nearest_point:
+                dist = self.get_distance((k, l), nearest_point)
+            else:
+                dist = None
+            if dist and dist >= 0:
+                tot += dist
+                count += 1
+
+        if count == 0:
+            count = float(0.001)
+
+        return tot / float(count)
+
+    def extract_blocks_from_segment(self, segment_number, threshold=1e-03, block_size=8, shift=1):
+        """
+        Returns an array of blocks generated around the surface of the
+        body in the specified segment
+        """
+        segments = self.extract_segment_blocks()
+
+        return self.generate_blocks(segments[segment_number], threshold, block_size, shift)
+
+    def generate_blocks(self, body_segment_matrix=None, threshold=1e-04, block_size=8, shift=8, use_max=True):
+        """
+        Generates blocks from a cropped segment
+        """
+        if not body_segment_matrix:
+            body_segment_matrix = self.img_data
+
+        bsm = body_segment_matrix
+        n = block_size
+        ds = int(n / 2)
+
+        output = []
+        for x in range(ds, len(bsm)-ds, shift):
+            lb = ds
+            ub = len(bsm[x][ds]-ds-1)
+            for z in range(ds, len(bsm[x])-ds, shift):
+                for y in range(lb, ub, shift):
+                    if not use_max:
+                        av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    else:
+                        av = np.max(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    if av >= threshold:
+                        data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
+                        coords = (x, z, y)
+                        block = Block(data, coords)
+                        output.append(block)
+
+        return output
+
+    def plot_3d_from_blocks(self, blocks):
+        """
+        plots 3d of the blocks.
+        """
+        x = []
+        y = []
+        z = []
+        c = []
+        for bl in blocks:
+            x.append(bl.coords[0])
+            y.append(bl.coords[1])
+            z.append(bl.coords[2])
+            c.append(np.average(bl.data))
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, c=c, cmap=plt.hot())
+
+        axes = plt.gca()
+        axes.set_xlim([0,512])
+        axes.set_ylim([0,512])
+        axes.set_zlim([0,660])
+
+        plt.show()
+
+    def stochastic_gradient_descent(self, data, dim=2, n=3, alpha=1e-4, max_iter=100, thresh=10, chunk=5):
+        # initialize variables
+        tot_n = np.power((n + 1), dim)
+        weights = np.ones(tot_n) / tot_n
+        c_list = []
+        alphas = np.array([])
+        data_shape = data.shape
+
+        # initialize c_list
+        pools = itertools.product(range(n+1), repeat=dim)
+        for k in pools:
+            c_list.append(np.array(k))
+
+        for c in c_list:
+            alph = np.linalg.norm(c)
+            if alph == 0:
+                alph = alpha
+            else:
+                alph = alpha / alph
+            alphas = np.append(alphas, alph)
+
+        # descend!
+        counter = 0
+        error = 100.0
+
+        while (counter < max_iter and error > thresh):
+            error = 0.0
+            for index, s in np.ndenumerate(data):
+                if (np.array(index) % chunk).any():
+                    continue
+                phis = np.array([])
+                x = np.ones(dim)
+                # normalizing x to 0 < x < 1
+                for l in range(dim):
+                    x[l] = float(index[l]) / data_shape[l]
+                for c in c_list:
+                    ret = self.phi(x, c)
+                    phis = np.append(phis, ret)
+
+                cur_error = np.dot(weights, phis) - s
+                error += np.power(cur_error, 2) / data.size
+                weights = weights - phis * alphas * cur_error
+            counter += 1
+            print("cur weight:", weights)
+            print("cur error: ", error)
+
+        return weights, c_list
+
+    def phi(self, x, c):
+        """
+        returns phi. x must be in [-1, 1]
+        """
+        return np.cos(np.pi * np.dot(x, c))
 
 
 class SupervisedClassifier(object):
