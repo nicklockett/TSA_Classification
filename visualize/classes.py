@@ -50,7 +50,7 @@ class BodyScan(object):
         """
         self.filepath = filepath
         self.header = self.read_header()
-        self.person_id = re.search(r"/\(\w+)\.", filepath).group(1)
+        self.person_id = re.search(r"\/(\w+)\.", filepath).group(1)
         self.img_data, self.imag = self.read_img_data()  # real and imaginary
 
     def read_header(self):
