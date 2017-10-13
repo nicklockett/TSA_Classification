@@ -388,17 +388,17 @@ class BodyScan(object):
 
         return cropped_img
 
-    def flatten1(self, thresh=3.5e-04):
+    def flatten1(self, thresh=3.5e-04, axis=1):
         """
         Flattens the 3D image to a 2d matrix using sum.
         """
-        return np.rot90(np.sum(self.img_data, axis=1))
+        return np.rot90(np.sum(self.img_data, axis=axis))
 
-    def flatten2(self, thresh=3.5e-04):
+    def flatten2(self, thresh=3.5e-04, axis=1):
         """
         Flattens the 3D image to a 2d matrix using max.
         """
-        return np.rot90(np.max(self.img_data, axis=1))
+        return np.rot90(np.max(self.img_data, axis=axis))
 
     def get_filepaths(self, directory):
         """
@@ -431,19 +431,19 @@ class BodyScan(object):
 
         return output
 
-    def write_to_img(self):
+    def write_to_img(self, axis=1):
         """
         flattens and writes to image
         """
         fname = "processed/" + self.person_id + "_1.png"
-        matrix = self.flatten1()
+        matrix = self.flatten1(axis=axis)
         matrix = matrix / np.max(matrix) * 255
         with open(fname, "wb") as f:
             w = png.Writer(512, 660, greyscale=True)
             w.write(f, matrix)
 
         fname = "processed/" + self.person_id + "_2.png"
-        matrix = self.flatten2()
+        matrix = self.flatten2(axis=axis)
         matrix = matrix / np.max(matrix) * 255
         with open(fname, "wb") as f:
             w = png.Writer(512, 660, greyscale=True)
