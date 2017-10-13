@@ -4,16 +4,20 @@ from abc import ABCMeta
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import cv2
+import matplotlib
 import numpy as np
 import itertools
 import os
 import pandas as pd
 import scipy.stats as stats
+import png
+import re
 import seaborn as sns
 
 from constants import *
 
-class Block:
+
+class Block(object):
     def __init__(self, data, coords, threat=0):
         self.data = data
         self.coords = coords
@@ -42,6 +46,7 @@ class BodyScan(object):
         """
         self.filepath = filepath
         self.header = self.read_header()
+        self.person_id = re.search(r"/\(\w+)\.", filepath).group(1)
         self.img_data, self.imag = self.read_img_data()  # real and imaginary
 
     def read_header(self):
@@ -379,6 +384,67 @@ class BodyScan(object):
 
         return cropped_img
 
+    def flatten1(self, thresh=3.5e-04):
+        """
+        Flattens the 3D image to a 2d matrix using sum.
+        """
+        return np.rot90(np.sum(self.img_data, axis=1))
+
+    def flatten2(self, thresh=3.5e-04):
+        """
+        Flattens the 3D image to a 2d matrix using max.
+        """
+        return np.rot90(np.max(self.img_data, axis=1))
+
+    def get_filepaths(self, directory):
+        """
+        retrieves a list of all filepaths from this directory
+        """
+        output = []
+
+        onlyfiles = [
+            f
+            for f in os.listdir(os.path.realpath("."))
+            if os.path.isfile(os.path.join(os.path.realpath("."), f))
+        ]
+
+        for k in onlyfiles:
+            output.append(os.path.join(directory, k))
+
+        return output
+
+    def get_a3d_filepaths(self, directory):
+        """
+        retrieves a list of a3d filepaths from this directory
+        """
+        output = []
+
+        onlyfiles = self.get_filenames(directory)
+
+        for k in onlyfiles:
+            if k.endswith(".a3d"):
+                output.append(k)
+
+        return output
+
+    def write_to_img(self):
+        """
+        flattens and writes to image
+        """
+        fname = "processed/" + self.person_id + "_1.png"
+        matrix = self.flatten1()
+        matrix = matrix / np.max(matrix) * 255
+        with open(fname, "wb") as f:
+            w = png.Writer(512, 660, greyscale=True)
+            w.write(f, matrix)
+
+        fname = "processed/" + self.person_id + "_2.png"
+        matrix = self.flatten2()
+        matrix = matrix / np.max(matrix) * 255
+        with open(fname, "wb") as f:
+            w = png.Writer(512, 660, greyscale=True)
+            w.write(f, matrix)
+
     def normalize(self, image):
         """
         Take segmented tsa image and normalize pixel values to be 
@@ -654,7 +720,19 @@ class SupervisedClassifier(object):
         Initializes labels_filepath
         """
         self.labels_filepath = labels_filepath
-        self.df_summary = self.get_hit_rate_stats()
+
+    def generate_feature_vector(self, img_data):
+        """
+        Given a 2D matrix of image, generates the feature vector (x, y).
+        x is the feature vector, y is the label
+        """
+        pass
+
+    def get_image_matrix(self, filepath):
+        """
+        From a png filepath, get image matrix
+        """
+        return matplotlib.image.imread(filepath)
 
     def get_hit_rate_stats(self):
         """
@@ -702,6 +780,23 @@ class SupervisedClassifier(object):
         print ('{:6s}   {:>4d}   {:6.3f}%'.format('Total ', np.int16(df_summary['sum'].sum(axis=0)), 
                                                  ( df_summary['sum'].sum(axis=0) / df_summary['count'].sum(axis=0))*100))
 
+    def get_filepaths(self, directory):
+        """
+        retrieves a list of all filepaths from this directory
+        """
+        output = []
+
+        onlyfiles = [
+            f
+            for f in os.listdir(os.path.realpath(directory))
+            if os.path.isfile(os.path.join(os.path.realpath(directory), f))
+        ]
+
+        for k in onlyfiles:
+            output.append(os.path.join(directory, k))
+
+        return output
+
     def get_subject_labels(self, subject_id):
         """
         lists threat probabilities by zone and returns a df with the list of
@@ -732,6 +827,46 @@ class SupervisedClassifier(object):
         
         return sorted(threat_list, key=lambda x: x[0])
 
+
+class TestingClassifier(SupervisedClassifier):
+    """
+    Classifier for regions 14 and 16
+    """
+    def __init__(self, labels_filepath):
+        super(TestingClassifier, self).__init__(labels_filepath)
+
+    def generate_feature_vector(self, img_path):
+        """
+        generates feature vectors from img_data (x, y)
+        """
+        subject_id = re.search(r"\/(\w+)_", img_path).group(1)
+        img_data = matplotlib.image.imread(img_path)
+        cropped_img = self.get_cropped_matrix(img_data)
+
+        threats_list = self.get_specific_threat_list(subject_id)
+        y = 0
+        for zone, prob in threats_list:
+            if zone == 14 or zone == 16:
+                if prob == 1:
+                    y = 1
+
+        return (np.ndarray.flatten(cropped_img), y)
+
+    def get_cropped_matrix(self, orig_img):
+        """
+        Crops to regions 14 and 16
+        """
+        return orig_img[500:660, 250:400]
+
+    def get_feature_vectors(self, directory):
+        """
+        reads pngs from this directory and gets feature vector list
+        """
+        filelist = self.get_filepaths(directory)
+        output = []
+        for f in filelist:
+            output.append(self.generate_feature_vector(f))
+        return output
 
 # class DeepCNN(SupervisedClassifier):
 #     """
