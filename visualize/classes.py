@@ -12,7 +12,11 @@ import pandas as pd
 import scipy.stats as stats
 import png
 import re
+import random
 import seaborn as sns
+from sklearn import svm, metrics, tree, naive_bayes
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.decomposition import PCA
 
 from constants import *
 
@@ -827,6 +831,12 @@ class SupervisedClassifier(object):
         
         return sorted(threat_list, key=lambda x: x[0])
 
+    def train(self):
+        """
+        Use SVM
+        """
+        pass
+
 
 class TestingClassifier(SupervisedClassifier):
     """
@@ -867,6 +877,80 @@ class TestingClassifier(SupervisedClassifier):
         for f in filelist:
             output.append(self.generate_feature_vector(f))
         return output
+
+    def train(self, directory):
+        """
+        use svm
+        """
+        fvs = self.get_feature_vectors(directory)
+        random.shuffle(fvs)
+        num_fvs = len(fvs)
+        ind_test = int(num_fvs / 10 * 8)
+        ind = 0
+
+        training_data = []
+        training_labels = []
+        test_data = []
+        test_labels = []
+
+        for feature, label in fvs:
+            if ind < ind_test:
+                training_data.append(feature)
+                training_labels.append(label)
+            else:
+                test_data.append(feature)
+                test_labels.append(label)
+            ind += 1
+
+        ### PCA ###
+        print("--- PCA Output ---")
+
+        print(len(test_data + training_data))
+        pca = PCA(n_components=15)
+        pca.fit(test_data + training_data)
+
+        print(pca.components_.shape)
+        print("Explained variance per component:")
+        print(pca.explained_variance_ratio_)
+
+        # plot first (x) and second (y) components
+        plt.scatter(pca.components_[0], pca.components_[1])
+        plt.show()
+
+        ### SVM ###
+        print("--- SVM Output ---")
+
+        # create the classifier
+        svm_classifier = svm.SVC(gamma=0.001)
+
+        # we learn on the training data
+        svm_classifier.fit(training_data, training_labels)
+        print("Done training.")
+
+        # now predict the threat
+        predicted = svm_classifier.predict(test_data)
+
+        # output results
+        print("Classification report for classifier %s:\n%s\n"
+              % (svm_classifier, metrics.classification_report(test_labels, predicted)))
+        print("Confusion matrix:\n%s" % metrics.confusion_matrix(test_labels, predicted))
+
+        ### RandomForestClassifier ###
+        print("--- RandomForestClassifier Output ---")
+
+        forest_classifier = RandomForestClassifier(n_estimators=10)
+
+        #learn
+        forest_classifier = forest_classifier.fit(training_data, training_labels)
+        print("Done training.")
+
+        # predict
+        predicted = forest_classifier.predict(test_data)
+
+        # output results
+        print("Classification report for classifier %s:\n%s\n"
+              % (forest_classifier, metrics.classification_report(test_labels, predicted)))
+        print("Confusion matrix:\n%s" % metrics.confusion_matrix(test_labels, predicted))
 
 # class DeepCNN(SupervisedClassifier):
 #     """
