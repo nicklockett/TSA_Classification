@@ -10,32 +10,45 @@ import matplotlib.pyplot as plt
 
 # need to ingest and iterate through multiple bodies
 images_list = [
-	"../data/fdb996a779e5d65d043eaa160ec2f09f.a3d",
+	#"../data/data/a3d/f2c1d30f352f6b5ab8dd5da31f85ee1d.a3d",
+	#"../data/data/a3d/f35a31e8b666ba97841c98ae6a26f3ef.a3d",
+	#"../data/data/a3d/f412f718c4ef81b6a7ce4b46651596ce.a3d",
+	#"../data/data/a3d/f5283ffe7e484ffc640ebcf62b534f7b.a3d",
+	#"../data/data/a3d/f5fed2604c69f028efba9c92459abe79.a3d",
+	"../data/data/a3d/f6303b38942d876f160302be6d2c34eb.a3d",
+	"../data/data/a3d/f92d8566ff9460451ab42093098a0efe.a3d",
+	"../data/data/a3d/f96fe81c61c951792a43cb4851ca3829.a3d",
+	"../data/data/a3d/faa3d6f358099ee2b091a5b87feca844.a3d",
+	"../data/data/a3d/fac0f28db837e3ae9f965560718674c6.a3d",
+	"../data/data/a3d/fae2676a3d4bd35b0b7088fad9f2e554.a3d",
+	"../data/data/a3d/fdb996a779e5d65d043eaa160ec2f09f.a3d"
 	]
 
 ### Formating Data ###
 
 # right now we're just throwing all the blocks from all images into the same list which is fed to the classifier
 uniform_blocks = []
-sc = SupervisedClassifier('../../stage1_labels.csv')
+sc = SupervisedClassifier('../data/data/stage1_labels.csv')
 
 for file_path in images_list:
-
+	
 	bs = BodyScan(file_path)
 	bsg = BlockStreamGenerator(bs, sc, blockSize = 16)
 	block_list = bsg.generateStream()
-
+	
+	
 	for block in block_list:
 		# checking to make sure it is a full block and not an edge case
-		if block.data.shape == (block.n,block.n,block.n):
+		if block.data.shape == (block.n, block.n, block.n):
 			uniform_blocks.append(block)
-
+	
 # shuffling so that the subset below doesn't bias the training data
 shuffle(uniform_blocks)
 
 # subset image into test and training data
 # TODO would this will be more effective to subset whole images into test vs training?
 block_count = len(uniform_blocks)
+
 training_data = uniform_blocks[:block_count/2]
 print(len(training_data))
 test_data = uniform_blocks[block_count/2:]

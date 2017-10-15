@@ -4,17 +4,24 @@ from abc import ABCMeta
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import cv2
+import matplotlib
 import numpy as np
 import itertools
 import os
 import pandas as pd
 import scipy.stats as stats
+import png
+import re
+import random
 import seaborn as sns
-import Queue
+from sklearn import svm, metrics, tree, naive_bayes
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.decomposition import PCA
 
 from constants import *
 
-class Block:
+
+class Block(object):
     def __init__(self, data, coords, threat=0):
         self.data = data
         self.coords = coords
@@ -22,8 +29,8 @@ class Block:
 
     def __eq__ (self, other):
         return self.coords[0] == other.coords[0] and \
-                self.coords[1] == other.coords[1] and \
-                self.coords[2] == other.coords[2]
+            self.coords[1] == other.coords[1] and \
+            self.coords[2] == other.coords[2]
 
     def __hash__(self):
         return self.coords[0] + self.coords[1]*1000 + self.coords[2]*1000*1000
@@ -43,6 +50,7 @@ class BodyScan(object):
         """
         self.filepath = filepath
         self.header = self.read_header()
+        self.person_id = re.search(r"\/(\w+)\.", filepath).group(1)
         self.img_data, self.imag = self.read_img_data()  # real and imaginary
 
     def read_header(self):
@@ -251,7 +259,6 @@ class BodyScan(object):
 
         return f
 
-
     def compress_along_y_z(self, full_data):
         print(full_data.shape)
 
@@ -380,6 +387,79 @@ class BodyScan(object):
         cropped_img = img[x_coord:x_coord+width, y_coord:y_coord+height]
 
         return cropped_img
+
+    def flatten1(self, thresh=3.5e-04, axis=1):
+        """
+        Flattens the 3D image to a 2d matrix using sum.
+        """
+        return np.rot90(np.sum(self.img_data, axis=axis))
+
+    def flatten2(self, thresh=3.5e-04, axis=1):
+        """
+        Flattens the 3D image to a 2d matrix using max.
+        """
+        return np.rot90(np.max(self.img_data, axis=axis))
+
+    def flatten_two(self, axis=1):
+        return np.rot90(np.max(self.img_data, axis=axis))
+
+    def get_filepaths(self, directory):
+        """
+        retrieves a list of all filepaths from this directory
+        """
+        output = []
+
+        onlyfiles = [
+            f
+            for f in os.listdir(os.path.realpath("."))
+            if os.path.isfile(os.path.join(os.path.realpath("."), f))
+        ]
+
+        for k in onlyfiles:
+            output.append(os.path.join(directory, k))
+
+        return output
+
+    def get_a3d_filepaths(self, directory):
+        """
+        retrieves a list of a3d filepaths from this directory
+        """
+        output = []
+
+        onlyfiles = self.get_filenames(directory)
+
+        for k in onlyfiles:
+            if k.endswith(".a3d"):
+                output.append(k)
+
+        return output
+
+    def write_to_img(self, axis=1):
+        """
+        flattens and writes to image
+        """
+        fname = "processed/" + self.person_id + "_1.png"
+        matrix = self.flatten1(axis=axis)
+        matrix = matrix / np.max(matrix) * 255
+        with open(fname, "wb") as f:
+            w = png.Writer(512, 660, greyscale=True)
+            w.write(f, matrix)
+
+        fname = "processed/" + self.person_id + "_2.png"
+        matrix = self.flatten2(axis=axis)
+        matrix = matrix / np.max(matrix) * 255
+        with open(fname, "wb") as f:
+            w = png.Writer(512, 660, greyscale=True)
+            w.write(f, matrix)
+
+    def write_slice_to_img(self, slic, filename):
+        """
+        Given a slice, writes it to a png
+        """
+        slic = slic / np.max(slic) * 255
+        with open(filename, "wb") as f:
+            w = png.Writer(512, 660, greyscale=True)
+            w.write(f, slic)
 
     def normalize(self, image):
         """
@@ -536,26 +616,32 @@ class BodyScan(object):
 
         return self.generate_blocks(segments[segment_number], threshold, block_size, shift)
 
-    def generate_blocks(self, body_segment_matrix, threshold, block_size, shift):
+    def generate_blocks(self, body_segment_matrix=None, threshold=1e-04, block_size=8, shift=8, use_max=True):
         """
         Generates blocks from a cropped segment
         """
+        if not body_segment_matrix:
+            body_segment_matrix = self.img_data
+
         bsm = body_segment_matrix
         n = block_size
         ds = int(n / 2)
 
-        output = set()
+        output = []
         for x in range(ds, len(bsm)-ds, shift):
             lb = ds
             ub = len(bsm[x][ds]-ds-1)
             for z in range(ds, len(bsm[x])-ds, shift):
                 for y in range(lb, ub, shift):
-                    av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    if not use_max:
+                        av = np.average(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
+                    else:
+                        av = np.max(bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds])
                     if av >= threshold:
                         data = bsm[x-ds:x+ds, z-ds:z+ds, y-ds:y+ds]
                         coords = (x, z, y)
                         block = Block(data, coords)
-                        output.add(block)
+                        output.append(block)
 
         return output
 
@@ -576,6 +662,11 @@ class BodyScan(object):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(x, y, z, c=c, cmap=plt.hot())
+
+        axes = plt.gca()
+        axes.set_xlim([0,512])
+        axes.set_ylim([0,512])
+        axes.set_zlim([0,660])
 
         plt.show()
 
@@ -645,7 +736,19 @@ class SupervisedClassifier(object):
         Initializes labels_filepath
         """
         self.labels_filepath = labels_filepath
-        self.df_summary = self.get_hit_rate_stats()
+
+    def generate_feature_vector(self, img_data):
+        """
+        Given a 2D matrix of image, generates the feature vector (x, y).
+        x is the feature vector, y is the label
+        """
+        pass
+
+    def get_image_matrix(self, filepath):
+        """
+        From a png filepath, get image matrix
+        """
+        return matplotlib.image.imread(filepath)
 
     def get_hit_rate_stats(self):
         """
@@ -693,6 +796,23 @@ class SupervisedClassifier(object):
         print ('{:6s}   {:>4d}   {:6.3f}%'.format('Total ', np.int16(df_summary['sum'].sum(axis=0)), 
                                                  ( df_summary['sum'].sum(axis=0) / df_summary['count'].sum(axis=0))*100))
 
+    def get_filepaths(self, directory):
+        """
+        retrieves a list of all filepaths from this directory
+        """
+        output = []
+
+        onlyfiles = [
+            f
+            for f in os.listdir(os.path.realpath(directory))
+            if os.path.isfile(os.path.join(os.path.realpath(directory), f))
+        ]
+
+        for k in onlyfiles:
+            output.append(os.path.join(directory, k))
+
+        return output
+
     def get_subject_labels(self, subject_id):
         """
         lists threat probabilities by zone and returns a df with the list of
@@ -723,6 +843,126 @@ class SupervisedClassifier(object):
         
         return sorted(threat_list, key=lambda x: x[0])
 
+    def train(self):
+        """
+        Use SVM
+        """
+        pass
+
+
+class TestingClassifier(SupervisedClassifier):
+    """
+    Classifier for regions 14 and 16
+    """
+    def __init__(self, labels_filepath):
+        super(TestingClassifier, self).__init__(labels_filepath)
+
+    def generate_feature_vector(self, img_path):
+        """
+        generates feature vectors from img_data (x, y)
+        """
+        subject_id = re.search(r"\/(\w+)_", img_path).group(1)
+        img_data = matplotlib.image.imread(img_path)
+        cropped_img = self.get_cropped_matrix(img_data)
+
+        threats_list = self.get_specific_threat_list(subject_id)
+        y = 0
+        for zone, prob in threats_list:
+            if zone == 14 or zone == 16:
+                if prob == 1:
+                    y = 1
+
+        return (np.ndarray.flatten(cropped_img), y)
+
+    def get_cropped_matrix(self, orig_img):
+        """
+        Crops to regions 14 and 16
+        """
+        return orig_img[500:660, 250:400]
+
+    def get_feature_vectors(self, directory):
+        """
+        reads pngs from this directory and gets feature vector list
+        """
+        filelist = self.get_filepaths(directory)
+        output = []
+        for f in filelist:
+            output.append(self.generate_feature_vector(f))
+        return output
+
+    def train(self, directory):
+        """
+        use svm
+        """
+        fvs = self.get_feature_vectors(directory)
+        random.shuffle(fvs)
+        num_fvs = len(fvs)
+        ind_test = int(num_fvs / 10 * 8)
+        ind = 0
+
+        training_data = []
+        training_labels = []
+        test_data = []
+        test_labels = []
+
+        for feature, label in fvs:
+            if ind < ind_test:
+                training_data.append(feature)
+                training_labels.append(label)
+            else:
+                test_data.append(feature)
+                test_labels.append(label)
+            ind += 1
+
+        ### PCA ###
+        print("--- PCA Output ---")
+
+        print(len(test_data + training_data))
+        pca = PCA(n_components=15)
+        pca.fit(test_data + training_data)
+
+        print(pca.components_.shape)
+        print("Explained variance per component:")
+        print(pca.explained_variance_ratio_)
+
+        # plot first (x) and second (y) components
+        plt.scatter(pca.components_[0], pca.components_[1])
+        plt.show()
+
+        ### SVM ###
+        print("--- SVM Output ---")
+
+        # create the classifier
+        svm_classifier = svm.SVC(gamma=0.001)
+
+        # we learn on the training data
+        svm_classifier.fit(training_data, training_labels)
+        print("Done training.")
+
+        # now predict the threat
+        predicted = svm_classifier.predict(test_data)
+
+        # output results
+        print("Classification report for classifier %s:\n%s\n"
+              % (svm_classifier, metrics.classification_report(test_labels, predicted)))
+        print("Confusion matrix:\n%s" % metrics.confusion_matrix(test_labels, predicted))
+
+        ### RandomForestClassifier ###
+        print("--- RandomForestClassifier Output ---")
+
+        forest_classifier = RandomForestClassifier(n_estimators=10)
+
+        #learn
+        forest_classifier = forest_classifier.fit(training_data, training_labels)
+        print("Done training.")
+
+        # predict
+        predicted = forest_classifier.predict(test_data)
+
+        # output results
+        print("Classification report for classifier %s:\n%s\n"
+              % (forest_classifier, metrics.classification_report(test_labels, predicted)))
+        print("Confusion matrix:\n%s" % metrics.confusion_matrix(test_labels, predicted))
 
 # class DeepCNN(SupervisedClassifier):
 #     """
