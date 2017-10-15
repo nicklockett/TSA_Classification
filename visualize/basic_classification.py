@@ -22,7 +22,7 @@ sc = SupervisedClassifier('../../stage1_labels.csv')
 for file_path in images_list:
 
 	bs = BodyScan(file_path)
-	bsg = BlockStreamGenerator(bs, sc)
+	bsg = BlockStreamGenerator(bs, sc, blockSize = 16)
 	block_list = bsg.generateStream()
 
 	for block in block_list:
@@ -89,6 +89,7 @@ plt.show()
 ###### Unsupervised Learning ######
 
 ### K-Means ###
+
 print("--- K-Means Output ---")
 kmeans_classifier = KMeans(n_clusters=2, random_state=0).fit(final_data_train)
 print("Done training.")
@@ -100,8 +101,24 @@ print("Classification report for classifier %s:\n%s\n"
       % (kmeans_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
-###### Supervised Learning ######
+"""
+### AffinityPropagation ###
+# WARNING: this is super memory intensive
+print("--- AffinityPropagation Output ---")
+affinity_classifier = AffinityPropagation(max_iter=50).fit(final_data_train)
+print("Done training.")
 
+predicted = affinity_classifier.predict(final_data_test)
+
+# output results
+print("Classification report for classifier %s:\n%s\n"
+      % (affinity_classifier, metrics.classification_report(final_labels_test, predicted)))
+print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
+
+"""
+
+###### Supervised Learning ######
+"""
 ### SVM ###
 print("--- SVM Output ---")
 
@@ -230,3 +247,4 @@ predicted = mlp_classifier.predict(scaled_test)
 print("Classification report for classifier %s:\n%s\n"
       % (mlp_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
+"""
