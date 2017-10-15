@@ -29,8 +29,8 @@ class Block(object):
 
     def __eq__ (self, other):
         return self.coords[0] == other.coords[0] and \
-                self.coords[1] == other.coords[1] and \
-                self.coords[2] == other.coords[2]
+            self.coords[1] == other.coords[1] and \
+            self.coords[2] == other.coords[2]
 
     def __hash__(self):
         return self.coords[0] + self.coords[1]*1000 + self.coords[2]*1000*1000
@@ -400,6 +400,9 @@ class BodyScan(object):
         """
         return np.rot90(np.max(self.img_data, axis=axis))
 
+    def flatten_two(self, axis=1):
+        return np.rot90(np.max(self.img_data, axis=axis))
+
     def get_filepaths(self, directory):
         """
         retrieves a list of all filepaths from this directory
@@ -448,6 +451,15 @@ class BodyScan(object):
         with open(fname, "wb") as f:
             w = png.Writer(512, 660, greyscale=True)
             w.write(f, matrix)
+
+    def write_slice_to_img(self, slic, filename):
+        """
+        Given a slice, writes it to a png
+        """
+        slic = slic / np.max(slic) * 255
+        with open(filename, "wb") as f:
+            w = png.Writer(512, 660, greyscale=True)
+            w.write(f, slic)
 
     def normalize(self, image):
         """
