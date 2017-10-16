@@ -440,17 +440,11 @@ class BodyScan(object):
         """
         fname = "processed/" + self.person_id + "_1.png"
         matrix = self.flatten1(axis=axis)
-        matrix = matrix / np.max(matrix) * 255
-        with open(fname, "wb") as f:
-            w = png.Writer(512, 660, greyscale=True)
-            w.write(f, matrix)
+        self.write_slice_to_img(matrix, fname)
 
         fname = "processed/" + self.person_id + "_2.png"
         matrix = self.flatten2(axis=axis)
-        matrix = matrix / np.max(matrix) * 255
-        with open(fname, "wb") as f:
-            w = png.Writer(512, 660, greyscale=True)
-            w.write(f, matrix)
+        self.write_slice_to_img(matrix, fname)
 
     def write_slice_to_img(self, slic, filename):
         """
