@@ -388,13 +388,13 @@ class BodyScan(object):
 
         return cropped_img
 
-    def flatten1(self, thresh=3.5e-04, axis=1):
+    def flatten_sum(self, thresh=3.5e-04, axis=1):
         """
         Flattens the 3D image to a 2d matrix using sum.
         """
         return np.rot90(np.sum(self.img_data, axis=axis))
 
-    def flatten2(self, thresh=3.5e-04, axis=1):
+    def flatten_max(self, thresh=3.5e-04, axis=1):
         """
         Flattens the 3D image to a 2d matrix using max.
         """
@@ -431,17 +431,18 @@ class BodyScan(object):
 
         return output
 
-    def write_to_img(self, axis=1):
+    def create_max_projection(self, file_path, axis=1):
         """
         flattens and writes to image
         """
-        fname = "processed/" + self.person_id + "_1.png"
-        matrix = self.flatten1(axis=axis)
-        self.write_slice_to_img(matrix, fname)
+        #fname = "processed/" + self.person_id + "_1.png"
+        #matrix = self.flatten_sum(axis=axis)
+        #self.write_slice_to_img(matrix, fname)
 
-        fname = "processed/" + self.person_id + "_2.png"
-        matrix = self.flatten2(axis=axis)
+        fname = file_path + self.person_id + "_projection.png"
+        matrix = self.flatten_max(axis=axis)
         self.write_slice_to_img(matrix, fname)
+        return(fname)
 
     def write_slice_to_img(self, slic, filename):
         """
