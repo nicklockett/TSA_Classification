@@ -2,7 +2,9 @@
 
 ## Setup
 1. Install ImageJ from https://imagej.nih.gov/ij/download.html 
-2. Download our python package into your directory housing your a3d files
+2. Clone this git repo to your local machine
+3. Install https://github.com/drj11/pypng by cloning the git repo and navigaating to the directory then run 'python setup.py install'
+4. Download the .a3d files you will be using into the a3d/ directory local to this repo
 
 ## Label an Image
 Some things to know
