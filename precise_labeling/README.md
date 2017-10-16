@@ -3,7 +3,7 @@
 ## Setup
 1. Install ImageJ from https://imagej.nih.gov/ij/download.html 
 2. Clone this git repo to your local machine
-3. Install pypng (https://github.com/drj11/pypng) by cloning the git repo from https://github.com/drj11/pypng.git and navigating to that project then run ```python setup.py install``` this can be done anywhere on your machine and does not need to be in the precise_labeling directory
+3. Install pypng by cloning the git repo from https://github.com/drj11/pypng.git and navigating to that project. Once you're within the project directory, run ```python setup.py install```. This can be done anywhere on your machine and does not need to be in the precise_labeling directory. You may need to run with ```sudo```, depending on your system's output.
 4. Download the .a3d files you will be using (assigned in document via email) into the a3d/ directory local to this repo
 
 ## Label an Image
