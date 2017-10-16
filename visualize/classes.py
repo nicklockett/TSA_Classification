@@ -400,9 +400,6 @@ class BodyScan(object):
         """
         return np.rot90(np.max(self.img_data, axis=axis))
 
-    def flatten_two(self, axis=1):
-        return np.rot90(np.max(self.img_data, axis=axis))
-
     def get_filepaths(self, directory):
         """
         retrieves a list of all filepaths from this directory
@@ -451,6 +448,8 @@ class BodyScan(object):
         Given a slice, writes it to a png
         """
         slic = slic / np.max(slic) * 255
+        if not filename.endswith(".png"):
+            filename += ".png"
         with open(filename, "wb") as f:
             w = png.Writer(512, 660, greyscale=True)
             w.write(f, slic)
