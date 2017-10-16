@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import division
 from abc import ABCMeta
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+#from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import matplotlib
 import numpy as np
@@ -459,6 +459,15 @@ class BodyScan(object):
         slic = slic / np.max(slic) * 255
         with open(filename, "wb") as f:
             w = png.Writer(512, 660, greyscale=True)
+            w.write(f, slic)
+
+    def write_square_slice_to_img(self, slic, filename):
+        """
+        Given a slice, writes it to a png
+        """
+        slic = slic / np.max(slic) * 255
+        with open(filename, "wb") as f:
+            w = png.Writer(512, 512, greyscale=True)
             w.write(f, slic)
 
     def normalize(self, image):
