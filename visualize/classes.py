@@ -846,6 +846,31 @@ class SupervisedClassifier(object):
         
         return sorted(threat_list, key=lambda x: x[0])
 
+    def get_precise_threat_from_segment(self, subject_id, segment):
+        filepath = "../precise_labeling/xyfiles/"
+        subject_id = "0043db5e8c819bffc15261b1f1ac5e42"
+        segment = "1"
+        filename = subject_id+"_"+ segment +"_threatcube.txt"
+        file = open(filepath+filename)
+
+        file_lines = file.readlines()
+
+        point_1 = file_lines[0].split('\n')[0].split('\t')
+        point_7 = file_lines[6].split('\n')[0].split('\t')
+
+        print(point_1)
+        print(point_7)
+
+        x_range = (point_1[0],point_7[0])
+        y_range = (point_1[1],point_7[1])
+        z_range = (point_1[2],point_7[2])
+
+        print (x_range)
+        print (y_range)
+        print (z_range)
+
+        return (x_range, y_range, z_range)
+
     def train(self):
         """
         Use SVM
