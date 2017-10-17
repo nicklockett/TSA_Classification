@@ -1,7 +1,7 @@
 # How to Label a Threat
 
 ## Quick Note
-If you have issues with any of these steps, feel free to message in our slack, and we can give advice and/or offer suggestions!
+If you have issues with any of these steps, feel free to message in our slack, and we can give advice and/or offer suggestions! You may need to install a couple python packages if you don't already have them in order for this to run.
 
 ## Setup
 1. Install ImageJ from https://imagej.nih.gov/ij/download.html 
