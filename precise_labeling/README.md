@@ -6,7 +6,7 @@ If you have issues with any of these steps, feel free to message in our slack, a
 ## Setup
 1. Install ImageJ from https://imagej.nih.gov/ij/download.html 
 2. Clone this git repo to your local machine
-3. Install pypng by cloning the git repo from https://github.com/drj11/pypng.git and navigating to that project. Once you're within the project directory, run ```python setup.py install```. This can be done anywhere on your machine and does not need to be in the precise_labeling directory. You may need to run with ```sudo```, depending on your system's output.
+3. Install pypng by cloning the git repo from https://github.com/drj11/pypng.git and navigating to that project. Once you're within the project directory, run ```python setup.py install```. This can be done anywhere on your machine and does not need to be in the precise_labeling directory. You may need to run with ```--user``` if you have permission issues.
 4. Download the .a3d files you will be using (assigned in document via email) into the TSA_Classification/precise_labeling/a3d/ directory local to this repo
 
 ## Label an Image
@@ -27,4 +27,4 @@ If you have issues with any of these steps, feel free to message in our slack, a
 9. draw a box around the threat
 10. click File -> Save As -> XY Coordinates, save the file with the name unchanged in the xyfiles/ dir
 11. run ``` python threat_localization.py [fileid] [region#]``` (Ex. ```python threat_localization.py 0043db5e8c819bffc15261b1f1ac5e42 1```) this should output ```[filename]_xy_[region]_threat.txt``` in the xyfiles/ dir. 
-12. add all threatcube files to google drive here: https://drive.google.com/drive/folders/0B8ZE8AuY2VhrNFB0dmxFUTRoNVE?usp=sharing
+12. add all the final threat files to google drive here: https://drive.google.com/drive/folders/0B8ZE8AuY2VhrNFB0dmxFUTRoNVE?usp=sharing
