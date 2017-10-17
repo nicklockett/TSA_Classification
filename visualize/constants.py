@@ -50,6 +50,7 @@ sector_crop_list = [
     [410, 200, 250, 250], # sector 14
     [410,   0, 250, 250], # sector 15
     [410, 200, 250, 250], # sector 16
+    [150, 150, 250, 250], # sector 5/17
 ]
 
 # Each element in the zone_slice_list contains the sector to use in the call to roi()
