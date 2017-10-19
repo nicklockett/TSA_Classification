@@ -30,5 +30,6 @@ If you have issues with any of these steps, feel free to message in our slack, a
 12. add all the final threat files to google drive here: https://drive.google.com/drive/folders/0B8ZE8AuY2VhrNFB0dmxFUTRoNVE?usp=sharing
 
 ### Troubleshooting
+* if you have any trouble visually identifying a threat from the front facing projection we recommend making a slice with the process we've outlined and seeing if you can more clearly identify it with this slice. That has been effective for us. If you cannot ID a threat in a region that is said to have a threat do not submit one that you can't actually see.
 * we recommend using python3 but when testing python27 worked fine as long as you don't have a 32 bit version
 * if you have any issue with seaborn you may need to install numpy-1.13+mkl which can be found here: http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
