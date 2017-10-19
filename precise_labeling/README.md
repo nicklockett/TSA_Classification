@@ -28,3 +28,7 @@ If you have issues with any of these steps, feel free to message in our slack, a
 10. click File -> Save As -> XY Coordinates, save the file with the name unchanged in the xyfiles/ dir
 11. run ``` python threat_localization.py [fileid] [region#]``` (Ex. ```python threat_localization.py 0043db5e8c819bffc15261b1f1ac5e42 1```) this should output ```[filename]_xy_[region]_threat.txt``` in the xyfiles/ dir. 
 12. add all the final threat files to google drive here: https://drive.google.com/drive/folders/0B8ZE8AuY2VhrNFB0dmxFUTRoNVE?usp=sharing
+
+### Troubleshooting
+* we recommend using python3 but when testing python27 worked fine as long as you don't have a 32 bit version
+* if you have any issue with seaborn you may need to install numpy-1.13+mkl which can be found here: http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
