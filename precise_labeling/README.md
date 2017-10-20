@@ -12,7 +12,7 @@ If you have issues with any of these steps, feel free to message in our slack, a
 ## Label an Image
 ### Labeling Guidelines
 * you must label each threat on any given image separately. Re-run the steps for each threat and differentiate the files using the region of the threat (file naming structure will be given below)
-* Be sure to have the csv file with the threats open so that you can double check where each threat is and whether or not you are catching all of them (some of them are pretty difficult to see).  But also keep in mind that some of their data is mislabeled, so if you really can't see the threat at all, then they may be wrong.
+* Be sure to have the csv file with the threats open (in this directory) so that you can double check where each threat is and whether or not you are catching all of them (some of them are pretty difficult to see). But also keep in mind that some of their data is mislabeled, so if you really can't see the threat at all, then they may be wrong. Also keep the body_regions.png open.
 * Be very careful to include all of the threat in your markings, with as little empty space as possible. It is essential to completely capture the threat. 
 
 ### Commands to Run
