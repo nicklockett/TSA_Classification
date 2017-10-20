@@ -1,13 +1,13 @@
 # How to Label a Threat
 
 ## Quick Note
-If you have issues with any of these steps, feel free to message in our slack, and we can give advice and/or offer suggestions!
+If you have issues with any of these steps, feel free to message in our slack, and we can give advice and/or offer suggestions! You may need to install a couple python packages if you don't already have them in order for this to run.
 
 ## Setup
 1. Install ImageJ from https://imagej.nih.gov/ij/download.html 
 2. Clone this git repo to your local machine
-3. Install pypng by cloning the git repo from https://github.com/drj11/pypng.git and navigating to that project. Once you're within the project directory, run ```python setup.py install```. This can be done anywhere on your machine and does not need to be in the precise_labeling directory. You may need to run with ```sudo```, depending on your system's output.
-4. Download the .a3d files you will be using (assigned in document via email) into the TSA_Classification/precise_labeling/a3d/ directory local to this repo
+3. Install pypng by cloning the git repo from https://github.com/drj11/pypng.git and navigating to that project. Once you're within the project directory, run ```python setup.py install```. This can be done anywhere on your machine and does not need to be in the precise_labeling directory. You may need to run with ```--user``` if you have permission issues.
+5. Download the .a3d files you will be using (outlined here: https://docs.google.com/spreadsheets/d/1x9bGCwdJ_ncP0VoQYyE9VbPjEzX-3OTnt9apPR-qBqw/edit#gid=0) into the TSA_Classification/precise_labeling/a3d/ directory local to this repo
 
 ## Label an Image
 ### Labeling Guidelines
@@ -27,4 +27,9 @@ If you have issues with any of these steps, feel free to message in our slack, a
 9. draw a box around the threat
 10. click File -> Save As -> XY Coordinates, save the file with the name unchanged in the xyfiles/ dir
 11. run ``` python threat_localization.py [fileid] [region#]``` (Ex. ```python threat_localization.py 0043db5e8c819bffc15261b1f1ac5e42 1```) this should output ```[filename]_xy_[region]_threat.txt``` in the xyfiles/ dir. 
-12. add all threatcube files to google drive here: https://drive.google.com/drive/folders/0B8ZE8AuY2VhrNFB0dmxFUTRoNVE?usp=sharing
+12. add all the final threat files to google drive here: https://drive.google.com/drive/folders/0B8ZE8AuY2VhrNFB0dmxFUTRoNVE?usp=sharing
+
+### Troubleshooting
+* if you have any trouble visually identifying a threat from the front facing projection we recommend making a slice with the process we've outlined and seeing if you can more clearly identify it with this slice. That has been effective for us. If you cannot ID a threat in a region that is said to have a threat do not submit one that you can't actually see.
+* we recommend using python3 but when testing python27 worked fine as long as you don't have a 32 bit version
+* if you have any issue with seaborn you may need to install numpy-1.13+mkl which can be found here: http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
