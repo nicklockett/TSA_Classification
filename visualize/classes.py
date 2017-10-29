@@ -1,10 +1,11 @@
 from __future__ import print_function
 from __future__ import division
 from abc import ABCMeta
-from matplotlib import pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
 import cv2
 import matplotlib
+matplotlib.use('Agg') 
+from matplotlib import pyplot as plt
 import numpy as np
 import itertools
 import os
