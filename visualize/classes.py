@@ -18,7 +18,8 @@ import seaborn as sns
 from sklearn import svm, metrics, tree, naive_bayes
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.decomposition import PCA
-
+from nibabel.testing import data_path
+import nibabel as nib
 from constants import *
 
 
@@ -259,6 +260,15 @@ class BodyScan(object):
             ax2.imshow(cv2.circle(gray_im,center,radius,(0,255,0),2))
 
         return f
+
+    #def get_segmented_data():
+    #    full_body_data = self.img_data
+
+     #   for x in range(0, len(full_body_data)):
+      #      for y in range(0, len(full_body_data[x])):
+       #         for z in range(0, len(full_body_data[x][y])):
+                    
+
 
     def compress_along_y_z(self, full_data):
         print(full_data.shape)
@@ -728,6 +738,32 @@ class BodyScan(object):
         """
         return np.cos(np.pi * np.dot(x, c))
 
+    def generate_warped_2D_segmentation(self, fileId):
+        #fileId = "fdb996a779e5d65d043eaa160ec2f09f"
+        example_file = "data/Batch_2D_warp_labels/" + fileId + "_label.nii"
+        img = nib.load(example_file)
+        img_data =  img.get_data()
+
+        data = []
+        for row in img_data:
+            new_row = []
+            for item in row:
+                new_row.append(item)
+            data.append(new_row)
+
+        final_data = np.array(data)
+        #final_data = np.flip(final_data, 0)
+        final_data = np.flip(final_data, 1)
+        print(final_data.shape)
+
+
+        #print final_data
+
+        #plt.figure()
+        #plt.imshow(final_data)
+        #plt.show()
+
+        return final_data
 
 class SupervisedClassifier(object):
     __metaclass__ = ABCMeta
@@ -849,7 +885,7 @@ class SupervisedClassifier(object):
 
     def get_precise_threat_from_segment(self, subject_id, segment):
         #TODO: values hardcoded, move to global variables
-        filepath = "../precise_labeling/xyfiles/"
+        filepath = "../precise_labeling/xyfiles/threatcubes/"
         filename = subject_id + "_" + str(segment) + "_threatcube.txt"
 
         if not os.path.exists(filepath+filename):
@@ -874,8 +910,9 @@ class SupervisedClassifier(object):
     def get_threatcubes(self, subject_id):
         threatcubes = []
 
-        for segment in range (1,17):
+        for segment in range (1,18):
             #print segment
+            print (segment)
             threatcubes.append(self.get_precise_threat_from_segment(subject_id, segment))
 
         print(threatcubes)

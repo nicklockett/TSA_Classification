@@ -24,20 +24,20 @@ images_list = [
 	#"../data/data/a3d/fdb996a779e5d65d043eaa160ec2f09f.a3d"
 "../precise_labeling/a3d/00360f79fd6e02781457eda48f85da90.a3d",
 "../precise_labeling/a3d/01c08047f617de893bef104fb309203a.a3d",
-"../precise_labeling/a3d/0397026df63bbc8fd88f9860c6e35b4a.a3d",
-"../precise_labeling/a3d/0043db5e8c819bffc15261b1f1ac5e42.a3d",
-"../precise_labeling/a3d/0240c8f1e89e855dcd8f1fa6b1e2b944.a3d",
-"../precise_labeling/a3d/03a36512c2c6d71c33b3429b8b59494e.a3d",
-"../precise_labeling/a3d/0050492f92e22eed3474ae3a6fc907fa.a3d",
-"../precise_labeling/a3d/0322661ef29f9c81af295cf40f758469.a3d",
-"../precise_labeling/a3d/04b32b70b4ab15cad85d43e3b5359239.a3d",
-"../precise_labeling/a3d/006ec59fa59dd80a64c85347eef810c7.a3d",
-"../precise_labeling/a3d/0367394485447c1c3485359ba71f52cb.a3d",
-"../precise_labeling/a3d/05709d5e54f8fdc77fe233cf7df78b81.a3d",
-"../precise_labeling/a3d/011516ab0eca7cad7f5257672ddde70e.a3d",
-"../precise_labeling/a3d/037024e4a7122e10546ebc41859c6833.a3d",
-"../precise_labeling/a3d/01941f33fd090ae5df8c95992c027862.a3d",
-"../precise_labeling/a3d/038d648c2f29cb0f945c865be25e32e9.a3d"
+"../precise_labeling/a3d/0397026df63bbc8fd88f9860c6e35b4a.a3d"
+#"../precise_labeling/a3d/0043db5e8c819bffc15261b1f1ac5e42.a3d",
+#"../precise_labeling/a3d/0240c8f1e89e855dcd8f1fa6b1e2b944.a3d",
+#"../precise_labeling/a3d/03a36512c2c6d71c33b3429b8b59494e.a3d",
+#"../precise_labeling/a3d/0050492f92e22eed3474ae3a6fc907fa.a3d",
+#"../precise_labeling/a3d/0322661ef29f9c81af295cf40f758469.a3d",
+#"../precise_labeling/a3d/04b32b70b4ab15cad85d43e3b5359239.a3d",
+#"../precise_labeling/a3d/006ec59fa59dd80a64c85347eef810c7.a3d",
+#"../precise_labeling/a3d/0367394485447c1c3485359ba71f52cb.a3d",
+#"../precise_labeling/a3d/05709d5e54f8fdc77fe233cf7df78b81.a3d",
+#"../precise_labeling/a3d/011516ab0eca7cad7f5257672ddde70e.a3d",
+#"../precise_labeling/a3d/037024e4a7122e10546ebc41859c6833.a3d",
+#"../precise_labeling/a3d/01941f33fd090ae5df8c95992c027862.a3d",
+#"../precise_labeling/a3d/038d648c2f29cb0f945c865be25e32e9.a3d"
 	]
 
 ### Formating Data ###
@@ -75,9 +75,15 @@ print('test data: ', len(test_data))
 
 # flatten the blocks into a vector
 
+i = 0
+
 # training data
 for block in training_data:
+	i = i + 1
 	block.data = block.data.flatten()
+	if i%1000 == 0 :
+		print 'done with: ', i
+		
 print 'flattened training data'
 
 final_data_train = []

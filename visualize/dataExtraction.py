@@ -7,7 +7,7 @@ import mpl_toolkits.mplot3d.axes3d as axes3d
 class BlockStreamGenerator:
 
     def __init__(self, BodyScan, SupervisedClassifier, threshold=2.0931642e-05, blockSize=8):
-        self.threshold = 2.0931642e-05
+        self.threshold = 5.0931642e-05#2.0931642e-05 
         self.blockSize = blockSize
         self.shift = int(blockSize / 2)
         self.bs = BodyScan
@@ -89,6 +89,8 @@ class BlockStreamGenerator:
         for b in range(0,16):
             # Obtain the hand labeled threat region range - will be -1,-1,-1
             threat_region = self.sc.get_precise_threat_from_segment(individual_name, b)
+            print threat_region
+
             print("Region: ", b+1)
             for x in range(0, len(body_segment_matrix[b]), self.shift):
                 for z in range(0, len(body_segment_matrix[b][x]), self.shift):
@@ -108,28 +110,65 @@ class BlockStreamGenerator:
                             break
         return results
 
-    def generateStreamHandLabeled(self):
+    def generate3DBlockStreamHandLabeled(self):
         
         results = []
+        individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
+        threat_cubes = self.sc.get_threatcubes(individual_id)
         full_body_data = self.bs.img_data
-        #segmented_data = self.bs.get_segmented_data()
-        individual_name = self.bs.filepath.split('/')[-1:][0].split('.')[0]
-        threat_cubes = self.sc.get_threatcubes(individual_name)
+        segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
+
+        print full_body_data.shape
 
         for x in range(0, len(full_body_data), self.shift):
             for y in range(0, len(full_body_data[x]), self.shift):
                 for z in range(0, len(full_body_data[x][y]), self.shift):
                     if(full_body_data[x][y][z] >= self.threshold):
                         is_threat = self.classifyThreat(x, y, z, threat_cubes)
-                        region_label = -1
-                        #region_label = self.classifyRegion(x, y, z, segmented_data)
-                        results.append(Block( full_body_data[ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], region_label, is_threat, individual_name, self.blockSize))
+                        region_label = self.classifyRegion(x,y,z, segmented_data)
+                        results.append(Block(full_body_data[ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], region_label, is_threat, individual_id, self.blockSize))
+                        if(is_threat):
+                            print(region_label)
 
         return results
 
+    def viewThreatLabels(self):
+        individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
+        threat_cubes = self.sc.get_threatcubes(individual_id)
+        full_body_data = self.bs.img_data
+        segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
+
+        print 'beginning our scan through the data'
+
+        max_val = np.amax(full_body_data)
+        print('max value: ', max_val)
+
+        for x in range(0, len(full_body_data), self.shift):
+            for y in range(0, len(full_body_data[x]), self.shift):
+                for z in range(0, len(full_body_data[x][y]), self.shift):
+                    region_label = self.classifyRegion(x,y,z, segmented_data)
+                    is_threat = self.classifyThreat(x, y, z, threat_cubes)
+                    if(full_body_data[x][y][z] >= self.threshold):
+                    #if(region_label!=1.0 or is_threat):
+                        full_body_data[x][y][z] = max_val
+                    else:
+                        full_body_data[x][y][z] = 0.0
+
+        print 'about to compress_along_x_y'
+        #print full_body_data
+        flattened_data = self.bs.compress_along_y_z(full_body_data)
+
+        print 'done compressing, now graphing'
+
+        plt.figure()
+        plt.imshow(flattened_data)
+        plt.show()
+
+        print 'done!'
+
     def classifyRegion(self, x, y, z, segmented_data):
-        return -1
-        #return segmented_data[x][y][z]
+        #print segmented_data.item(x,y)
+        return segmented_data[z][x]
 
     def classifyThreat(self, x, y, z, threat_regions):
         for region in threat_regions:
@@ -142,18 +181,18 @@ class BlockStreamGenerator:
         # If this isn't a segment with a threat anyways, return False
         if(threat_region==-1):
             return False
-        
-        # IMPORTANT NOTE: make sure these are using the same axis type
-        threat_x = threat_region[0][0]
-        threat_y = threat_region[0][1]
 
+        #print (x,y,z)
         in_x_region = (threat_region[0][0] < x) & (x < threat_region[0][1])
-        in_y_region = (threat_region[1][0] < y) & (y < threat_region[1][1])
-        in_z_region = (threat_region[2][0] < z) & (z < threat_region[2][1])
+        in_y_region = ((660 - threat_region[1][1]) < z) & (z < (660 - threat_region[1][0]))
+        in_z_region = (threat_region[2][0] < y) & (y < threat_region[2][1])
 
+        #print in_x_region
+        #print in_y_region
+        #print in_z_region
 
-        if in_x_region & in_y_region & in_z_region:
-            print 'FOUND A THREAT'
+        #if in_x_region & in_y_region & in_z_region:
+            #print 'FOUND A THREAT'
 
         return in_x_region & in_y_region & in_z_region
 
