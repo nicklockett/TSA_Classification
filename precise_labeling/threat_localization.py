@@ -7,6 +7,7 @@ def main(argv):
 	else:
 		file1_directory = "xyfiles/"+argv[1]+"_xy_"+argv[2]+".txt"
 		file2_directory = "xyfiles/"+argv[1]+"_xy_"+argv[2]+"_slice.txt"
+		print(file1_directory)
 
 		file1 = open(file1_directory, "r")
 		file1_points = file1.readlines()

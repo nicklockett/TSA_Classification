@@ -9,6 +9,7 @@ from sklearn.cluster import KMeans, AffinityPropagation
 import matplotlib.pyplot as plt
 
 # need to ingest and iterate through multiple bodies
+"""
 images_list = [
 	#"../data/data/a3d/f2c1d30f352f6b5ab8dd5da31f85ee1d.a3d",
 	#"../data/data/a3d/f35a31e8b666ba97841c98ae6a26f3ef.a3d",
@@ -38,7 +39,10 @@ images_list = [
 "../precise_labeling/a3d/037024e4a7122e10546ebc41859c6833.a3d",
 "../precise_labeling/a3d/01941f33fd090ae5df8c95992c027862.a3d",
 "../precise_labeling/a3d/038d648c2f29cb0f945c865be25e32e9.a3d"
-	]
+	]"""
+images_list = [
+	"../precise_labeling/a3d/1e4a14d2e1eb381b773446de1c0c0b7e.a3d"
+]
 
 ### Formating Data ###
 
@@ -47,13 +51,13 @@ uniform_blocks = []
 sc = SupervisedClassifier('../data/data/stage1_labels.csv')
 
 for file_path in images_list:
-	print file_path
+	print(file_path)
 	bs = BodyScan(file_path)
-	print 'made body scan!'
+	print('made body scan!')
 	bsg = BlockStreamGenerator(bs, sc, blockSize = 36)
 	#block_list = bsg.generateStream()
 	block_list = bsg.generateStreamHandLabeled()
-	print 'generated blocks!'
+	print('generated blocks!')
 	
 	
 	for block in block_list:
@@ -68,9 +72,9 @@ shuffle(uniform_blocks)
 # TODO would this will be more effective to subset whole images into test vs training?
 block_count = len(uniform_blocks)
 
-training_data = uniform_blocks[:block_count/2]
+training_data = uniform_blocks[:int(block_count/2)]
 print('training data: ', len(training_data))
-test_data = uniform_blocks[block_count/2:]
+test_data = uniform_blocks[int(block_count/2):]
 print('test data: ', len(test_data))
 
 # flatten the blocks into a vector
@@ -78,42 +82,42 @@ print('test data: ', len(test_data))
 # training data
 for block in training_data:
 	block.data = block.data.flatten()
-print 'flattened training data'
+print('flattened training data')
 
 final_data_train = []
 for block in training_data:
 	final_data_train.append(block.data)
 
-print 'created final data training set'
+print('created final data training set')
 
 final_labels = []
 for block in training_data:
 	final_labels.append(block.threat)
 
-print 'appended final labels to training data'
+print('appended final labels to training data')
 
 # test data
 for block in test_data:
 	block.data = block.data.flatten()
 
-print 'flattened test data'
+print('flattened test data')
 
 final_data_test = []
 for block in test_data:
 	final_data_test.append(block.data)
 
-print 'created final test data set'
+print('created final test data set')
 
 final_labels_test = []
 for block in test_data:
 	final_labels_test.append(block.threat)
 
-print 'appended final labels to test data'
+print('appended final labels to test data')
 
 ###### Dimensionality Reduction ######
 
 ### PCA ###
-
+"""
 print("--- PCA Output ---")
 
 print(len(final_data_test + final_data_train))
@@ -144,7 +148,6 @@ print("Classification report for classifier %s:\n%s\n"
       % (kmeans_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
-"""
 ### AffinityPropagation ###
 # WARNING: this is super memory intensive
 print("--- AffinityPropagation Output ---")
@@ -159,7 +162,6 @@ print("Classification report for classifier %s:\n%s\n"
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
 """
-
 ###### Supervised Learning ######
 
 ### SVM ###
@@ -198,7 +200,7 @@ print("Classification report for classifier %s:\n%s\n"
       % (tree_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
-
+"""
 ### RandomForestClassifier ###
 
 print("--- RandomForestClassifier Output ---")
@@ -290,3 +292,5 @@ predicted = mlp_classifier.predict(scaled_test)
 print("Classification report for classifier %s:\n%s\n"
       % (mlp_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
+
+"""

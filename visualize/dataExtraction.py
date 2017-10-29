@@ -71,9 +71,9 @@ class BlockStreamGenerator:
 
         # returns 17 2D planes corresponding with body segments
         body_segment_matrix = self.bs.extract_segment_blocks()
-        print 'body_segment_matrix: ', body_segment_matrix
+        print('body_segment_matrix: ', body_segment_matrix)
 
-        print 'body segment shape:', body_segment_matrix[0].shape
+        print('body segment shape:', body_segment_matrix[0].shape)
 
         self.plotcube(body_segment_matrix[6])
 
@@ -153,7 +153,7 @@ class BlockStreamGenerator:
 
 
         if in_x_region & in_y_region & in_z_region:
-            print 'FOUND A THREAT'
+            print('FOUND A THREAT')
 
         return in_x_region & in_y_region & in_z_region
 
