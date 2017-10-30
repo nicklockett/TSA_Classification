@@ -10,35 +10,8 @@ import matplotlib.pyplot as plt
 
 # need to ingest and iterate through multiple bodies
 images_list = [
-	#"../data/data/a3d/f2c1d30f352f6b5ab8dd5da31f85ee1d.a3d",
-	#"../data/data/a3d/f35a31e8b666ba97841c98ae6a26f3ef.a3d",
-	#"../data/data/a3d/f412f718c4ef81b6a7ce4b46651596ce.a3d",
-	#"../data/data/a3d/f5283ffe7e484ffc640ebcf62b534f7b.a3d",
-	#"../data/data/a3d/f5fed2604c69f028efba9c92459abe79.a3d",
-	#"../data/data/a3d/f6303b38942d876f160302be6d2c34eb.a3d",
-	#"../data/data/a3d/f92d8566ff9460451ab42093098a0efe.a3d",
-	#"../data/data/a3d/f96fe81c61c951792a43cb4851ca3829.a3d",
-	#"../data/data/a3d/faa3d6f358099ee2b091a5b87feca844.a3d",
-	#"../data/data/a3d/fac0f28db837e3ae9f965560718674c6.a3d",
-	#"../data/data/a3d/fae2676a3d4bd35b0b7088fad9f2e554.a3d",
-	#"../data/data/a3d/fdb996a779e5d65d043eaa160ec2f09f.a3d"
-"../precise_labeling/a3d/00360f79fd6e02781457eda48f85da90.a3d",
-"../precise_labeling/a3d/01c08047f617de893bef104fb309203a.a3d",
-"../precise_labeling/a3d/0397026df63bbc8fd88f9860c6e35b4a.a3d"
-#"../precise_labeling/a3d/0043db5e8c819bffc15261b1f1ac5e42.a3d",
-#"../precise_labeling/a3d/0240c8f1e89e855dcd8f1fa6b1e2b944.a3d",
-#"../precise_labeling/a3d/03a36512c2c6d71c33b3429b8b59494e.a3d",
-#"../precise_labeling/a3d/0050492f92e22eed3474ae3a6fc907fa.a3d",
-#"../precise_labeling/a3d/0322661ef29f9c81af295cf40f758469.a3d",
-#"../precise_labeling/a3d/04b32b70b4ab15cad85d43e3b5359239.a3d",
-#"../precise_labeling/a3d/006ec59fa59dd80a64c85347eef810c7.a3d",
-#"../precise_labeling/a3d/0367394485447c1c3485359ba71f52cb.a3d",
-#"../precise_labeling/a3d/05709d5e54f8fdc77fe233cf7df78b81.a3d",
-#"../precise_labeling/a3d/011516ab0eca7cad7f5257672ddde70e.a3d",
-#"../precise_labeling/a3d/037024e4a7122e10546ebc41859c6833.a3d",
-#"../precise_labeling/a3d/01941f33fd090ae5df8c95992c027862.a3d",
-#"../precise_labeling/a3d/038d648c2f29cb0f945c865be25e32e9.a3d"
-	]
+	"../precise_labeling/a3d/1e4a14d2e1eb381b773446de1c0c0b7e.a3d"
+]
 
 ### Formating Data ###
 
@@ -47,13 +20,13 @@ uniform_blocks = []
 sc = SupervisedClassifier('../data/data/stage1_labels.csv')
 
 for file_path in images_list:
-	print file_path
+	print(file_path)
 	bs = BodyScan(file_path)
-	print 'made body scan!'
+	print('made body scan!')
 	bsg = BlockStreamGenerator(bs, sc, blockSize = 36)
 	#block_list = bsg.generateStream()
 	block_list = bsg.generateStreamHandLabeled()
-	print 'generated blocks!'
+	print('generated blocks!')
 	
 	
 	for block in block_list:
@@ -68,21 +41,16 @@ shuffle(uniform_blocks)
 # TODO would this will be more effective to subset whole images into test vs training?
 block_count = len(uniform_blocks)
 
-training_data = uniform_blocks[:block_count/2]
+training_data = uniform_blocks[:int(block_count/2)]
 print('training data: ', len(training_data))
-test_data = uniform_blocks[block_count/2:]
+test_data = uniform_blocks[int(block_count/2):]
 print('test data: ', len(test_data))
 
 # flatten the blocks into a vector
 
-i = 0
-
 # training data
 for block in training_data:
-	i = i + 1
 	block.data = block.data.flatten()
-	if i%1000 == 0 :
-		print 'done with: ', i
 		
 print 'flattened training data'
 
@@ -90,36 +58,36 @@ final_data_train = []
 for block in training_data:
 	final_data_train.append(block.data)
 
-print 'created final data training set'
+print('created final data training set')
 
 final_labels = []
 for block in training_data:
 	final_labels.append(block.threat)
 
-print 'appended final labels to training data'
+print('appended final labels to training data')
 
 # test data
 for block in test_data:
 	block.data = block.data.flatten()
 
-print 'flattened test data'
+print('flattened test data')
 
 final_data_test = []
 for block in test_data:
 	final_data_test.append(block.data)
 
-print 'created final test data set'
+print('created final test data set')
 
 final_labels_test = []
 for block in test_data:
 	final_labels_test.append(block.threat)
 
-print 'appended final labels to test data'
+print('appended final labels to test data')
 
 ###### Dimensionality Reduction ######
 
 ### PCA ###
-
+"""
 print("--- PCA Output ---")
 
 print(len(final_data_test + final_data_train))
@@ -150,7 +118,6 @@ print("Classification report for classifier %s:\n%s\n"
       % (kmeans_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
-"""
 ### AffinityPropagation ###
 # WARNING: this is super memory intensive
 print("--- AffinityPropagation Output ---")
@@ -165,7 +132,6 @@ print("Classification report for classifier %s:\n%s\n"
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
 """
-
 ###### Supervised Learning ######
 
 ### SVM ###
@@ -204,7 +170,7 @@ print("Classification report for classifier %s:\n%s\n"
       % (tree_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
 
-
+"""
 ### RandomForestClassifier ###
 
 print("--- RandomForestClassifier Output ---")
@@ -296,3 +262,5 @@ predicted = mlp_classifier.predict(scaled_test)
 print("Classification report for classifier %s:\n%s\n"
       % (mlp_classifier, metrics.classification_report(final_labels_test, predicted)))
 print("Confusion matrix:\n%s" % metrics.confusion_matrix(final_labels_test, predicted))
+
+"""

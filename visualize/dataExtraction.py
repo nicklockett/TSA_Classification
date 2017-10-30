@@ -71,9 +71,9 @@ class BlockStreamGenerator:
 
         # returns 17 2D planes corresponding with body segments
         body_segment_matrix = self.bs.extract_segment_blocks()
-        print 'body_segment_matrix: ', body_segment_matrix
+        print('body_segment_matrix: ', body_segment_matrix)
 
-        print 'body segment shape:', body_segment_matrix[0].shape
+        print('body segment shape:', body_segment_matrix[0].shape)
 
         self.plotcube(body_segment_matrix[6])
 
@@ -180,14 +180,13 @@ class BlockStreamGenerator:
         print 'beginning our scan through the data'
 
         max_val = np.amax(full_body_data)
-        print('max value: ', max_val)
 
         for x in range(0, len(full_body_data), self.shift):
             for y in range(0, len(full_body_data[x]), self.shift):
                 for z in range(0, len(full_body_data[x][y]), self.shift):
                     region_label = self.classifyRegion(x,y,z, segmented_data)
                     is_threat = self.classifyThreat(x, y, z, threat_cubes)
-                    if(full_body_data[x][y][z] >= self.threshold):
+                    if(is_threat):
                     #if(region_label!=1.0 or is_threat):
                         full_body_data[x][y][z] = max_val
                     else:
@@ -195,8 +194,8 @@ class BlockStreamGenerator:
 
         print 'about to compress_along_x_y'
         #print full_body_data
-        flattened_data = self.bs.compress_along_y_z(full_body_data)
-
+        #flattened_data = self.bs.compress_along_y_z(full_body_data)
+        flattened_data = self.bs.flatten_max()
         print 'done compressing, now graphing'
 
         plt.figure()
