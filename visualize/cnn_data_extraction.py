@@ -4,14 +4,29 @@ import math
 import matplotlib.pyplot as plot
 import mpl_toolkits.mplot3d.axes3d as axes3d
 
-class BlockStreamGenerator:
+class CnnDataExtractor:
 
-    def __init__(self, BodyScan, SupervisedClassifier, threshold=2.0931642e-05, blockSize=8):
-        self.threshold = threshold
-        self.blockSize = blockSize
-        self.shift = int(blockSize / 2)
-        self.bs = BodyScan
-        self.sc = SupervisedClassifier
+    #def __init__(self, image_list):
+    #    self.image_list = image_list
+
+    def extract2DDataSet(image_path_list, block_size):
+        """This method returns the 2D training data, training labels, 
+        testing data, and testing labels for a particular data set"""
+
+        block_stream = []
+
+        for image_path in image_path_list:
+            for file_path in images_list:
+            bs = BodyScan(file_path)
+            bsg = BlockStreamGenerator(bs, sc, block_size)
+            block_list = bsg.generate2DBlockStreamHandLabeled()
+            
+            for block in block_list:
+                if block[0].shape == (block_size, block_size):
+                    block_stream.append(block)
+
+        print 'synthesized ', len(block_stream), ' total blocks.'
+
 
     def generateSegmentStream(self):
         results = [] # final list of all blocks
@@ -123,53 +138,17 @@ class BlockStreamGenerator:
         for x in range(0, len(full_body_data), self.shift):
             for y in range(0, len(full_body_data[x]), self.shift):
                 for z in range(0, len(full_body_data[x][y]), self.shift):
-                    if(full_body_data[x][y][z] >= self.threshold):
                         is_threat = self.classifyThreat(x, y, z, threat_cubes)
                         region_label = self.classifyRegion(x,y,z, segmented_data)
-                        results.append(Block(full_body_data[ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], region_label, is_threat, individual_id, self.blockSize))
+                        # TODO: if the point is at a threat, but the region labels it as background,
+                        # instead use the region label nearest to the point as the actual label
+                        greater_than_threshold = full_body_data[x][y][z] >= self.threshold
+                        if(is_threat or (region_label!=1.0 and greater_than_threshold)):
+                            results.append(Block(full_body_data[ x-self.shift:x+self.shift, z-self.shift:z+self.shift, y-self.shift:y+self.shift], region_label, is_threat, individual_id, self.blockSize))
                         if(is_threat):
                             print(region_label)
 
         return results
-
-    def generate2DBlockStreamHandLabeled(self):
-        block_stream = []
-        individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
-        image_2D = self.bs.flatten_max()
-        threat_cubes = self.sc.get_threatcubes(individual_id)
-        segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
-
-        for x in range(0, len(image_2D), self.shift):
-            for y in range(0, len(image_2D[x]), self.shift):
-                    region_label = self.classifyRegion2D(x, y, segmented_data)
-                    if(region_label!=1.0):
-                        is_threat = self.classifyThreat2D(x, y, threat_cubes)
-                        data = image_2D[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
-                        block_stream.append((data, region_label, is_threat))
-                        if(is_threat):
-                            print(region_label)
-
-        return block_stream
-
-    def classifyRegion2D(self, x, y, segmented_data):
-        return segmented_data[660-1-x][y]
-
-    def classifyThreat2D(self, x, y, threat_regions):
-        for region in threat_regions:
-            if(self.blockInThreatZone2D(x, y, region)):
-                return True
-
-        return False 
-
-    def blockInThreatZone2D(self, x, y, threat_region):
-        # If this isn't a segment with a threat anyways, return False
-        if(threat_region==-1):
-            return False
-
-        in_x_region = (threat_region[0][0] < y) & (y < threat_region[0][1])
-        in_y_region = (threat_region[1][0] < x) & (x <  threat_region[1][1])
-
-        return in_x_region & in_y_region
 
     def viewThreatLabels(self):
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
@@ -185,10 +164,10 @@ class BlockStreamGenerator:
         for x in range(0, len(full_body_data), self.shift):
             for y in range(0, len(full_body_data[x]), self.shift):
                 for z in range(0, len(full_body_data[x][y]), self.shift):
-                    region_label = self.classifyRegion(x,y,z, segmented_data)
                     is_threat = self.classifyThreat(x, y, z, threat_cubes)
-                    if(full_body_data[x][y][z] >= self.threshold):
-                    #if(region_label!=1.0 or is_threat):
+                    region_label = self.classifyRegion(x,y,z, segmented_data)
+                    greater_than_threshold = full_body_data[x][y][z] >= self.threshold
+                    if(is_threat or (region_label!=1.0 and greater_than_threshold)):
                         full_body_data[x][y][z] = max_val
                     else:
                         full_body_data[x][y][z] = 0.0
@@ -221,11 +200,21 @@ class BlockStreamGenerator:
         if(threat_region==-1):
             return False
 
+        #print (x,y,z)
         in_x_region = (threat_region[0][0] < x) & (x < threat_region[0][1])
         in_y_region = ((660 - threat_region[1][1]) < z) & (z < (660 - threat_region[1][0]))
         in_z_region = (threat_region[2][0] < y) & (y < threat_region[2][1])
 
+        #print in_x_region
+        #print in_y_region
+        #print in_z_region
+
+        #if in_x_region & in_y_region & in_z_region:
+            #print 'FOUND A THREAT'
+
         return in_x_region & in_y_region & in_z_region
+
+    #def classifyBlockSegment():
 
 class Block:
     def __init__(self, data, region, threat, name, n):
