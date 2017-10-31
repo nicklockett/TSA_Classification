@@ -752,16 +752,7 @@ class BodyScan(object):
             data.append(new_row)
 
         final_data = np.array(data)
-        #final_data = np.flip(final_data, 0)
         final_data = np.flip(final_data, 1)
-        print(final_data.shape)
-
-
-        #print final_data
-
-        #plt.figure()
-        #plt.imshow(final_data)
-        #plt.show()
 
         return final_data
 
@@ -911,11 +902,8 @@ class SupervisedClassifier(object):
         threatcubes = []
 
         for segment in range (1,18):
-            #print segment
-            print (segment)
             threatcubes.append(self.get_precise_threat_from_segment(subject_id, segment))
 
-        print(threatcubes)
         return threatcubes
 
     def train(self):

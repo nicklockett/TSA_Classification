@@ -10,7 +10,7 @@ from dataExtraction import *
 from random import shuffle
 
 tf.logging.set_verbosity(tf.logging.INFO)
-block_size = 28
+block_size = 40
 
 def main(unused_argv):
 
@@ -18,8 +18,23 @@ def main(unused_argv):
 	sc = SupervisedClassifier('../../stage1_labels.csv')
 
 	# Set image list for use
-	image_path_list = []
-	image_path_list.append("../precise_labeling/a3d/0e34d284cb190a79e3316d1926061bc3.a3d")
+	image_path_list = ["../precise_labeling/a3d/0e34d284cb190a79e3316d1926061bc3.a3d",
+"../precise_labeling/a3d/1636ba745a6fc4d97dba1d27825de2b0.a3d",
+"../precise_labeling/a3d/011516ab0eca7cad7f5257672ddde70e.a3d",
+"../precise_labeling/a3d/0d10b14405f0443be67a75554da778a0.a3d",
+"../precise_labeling/a3d/2f5c066720d997f33453dc491141bc70.a3d",
+"../precise_labeling/a3d/0fdad88d401b09d417ffbc490640d9e2.a3d",
+"../precise_labeling/a3d/098f5cfcf6faefd3011a94719cb03dc5.a3d",
+"../precise_labeling/a3d/0240c8f1e89e855dcd8f1fa6b1e2b944.a3d",
+"../precise_labeling/a3d/3c0668db35915783be0af87b9fa53317.a3d",
+"../precise_labeling/a3d/41ed36bdc93a2ff5519c76f263ab1a88.a3d",
+"../precise_labeling/a3d/04b32b70b4ab15cad85d43e3b5359239.a3d",
+"../precise_labeling/a3d/42181583618ce4bbfbc0c4c300108bf5.a3d",
+"../precise_labeling/a3d/0e34d284cb190a79e3316d1926061bc3.a3d",
+"../precise_labeling/a3d/0043db5e8c819bffc15261b1f1ac5e42.a3d",
+"../precise_labeling/a3d/3eda71e0fd6f0c18c1fa43371c4212e4.a3d",
+"../precise_labeling/a3d/052117021fc1396db6bae78ffe923ee4.a3d",
+"../precise_labeling/a3d/11f9ae01877f6c0becf49c709eddb8cb.a3d"]
 
 	# Set segmentNumber
 	segmentNumber = 0.8
@@ -29,7 +44,7 @@ def main(unused_argv):
 
 	# Create the Estimator
 	mnist_classifier = tf.estimator.Estimator(
-	    model_fn=cnn_model_fn, model_dir="../cnn_model_output")
+	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_4")
 
 	# Set up logging for predictions
 	tensors_to_log = {"probabilities": "softmax_tensor"}
@@ -45,7 +60,7 @@ def main(unused_argv):
 	    shuffle=True)
 	mnist_classifier.train(
 	    input_fn=train_input_fn,
-	    steps=20000,
+	    steps=20000, # QUESTION: why do we need so many steps here...
 	    hooks=[logging_hook])
 
 	# Evaluate the model and print results
@@ -74,11 +89,9 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
         block_list = bsg.generate2DBlockStreamHandLabeled()
         
         for block in block_list:
-        	print ('block shape ', block[0].shape)
-        	print (block[0].shape == (block_size, block_size))
         	if block[0].shape == (block_size, block_size):
-        		if(segmentNumber == block[1]):
-        			data_label_stream.append((block[0], int(block[2])))
+        		#if(segmentNumber == block[1]):
+        		data_label_stream.append((block[0], int(block[2])))
 
     print('total data length: ',len(data_label_stream))
 
@@ -97,6 +110,7 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
     print('type data stream: ',type(data_stream[0]))
     print('type label stream: ',type(label_stream[0]))
 
+    print('labels: ',label_stream)
     # Determine indexing length
     trainingLength = int(len(data_label_stream)/2)
 
@@ -108,6 +122,9 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
     testingData = data_stream[trainingLength:]
     testingLabels = label_stream[trainingLength:]
 
+    print('training labels: ',trainingLabels)
+    print('testing labels: ',testingLabels)
+
     # Convert to numpy arrays
     trainingData = np.array(trainingData)
     trainingLabels = np.array(trainingLabels)
@@ -118,8 +135,6 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
 
 # Our application logic will be added here
 def cnn_model_fn(features, labels, mode):
-
-	block_size = 28
 
 	"""Model function for CNN."""
 	# Input Layer

@@ -111,7 +111,6 @@ class BlockStreamGenerator:
         return results
 
     def generate3DBlockStreamHandLabeled(self):
-        
         results = []
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
         threat_cubes = self.sc.get_threatcubes(individual_id)

@@ -10,7 +10,7 @@ bs = BodyScan("data/a3d/"+fileId+".a3d")
 sc = SupervisedClassifier('../../stage1_labels.csv')
 #threat_range = sc.get_precise_threat_from_segment("0","0")
 #print threat_range
-bsg = BlockStreamGenerator(bs, sc, blockSize = 8)
+bsg = BlockStreamGenerator(bs, sc, blockSize = 50)
 print 'about to view threat labels'
 bsg.viewThreatLabels()
 #block_list = bsg.generate2DBlockStreamHandLabeled()
