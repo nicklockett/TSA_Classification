@@ -44,7 +44,7 @@ def main(unused_argv):
 
 	# Create the Estimator
 	mnist_classifier = tf.estimator.Estimator(
-	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_4")
+	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_5")
 
 	# Set up logging for predictions
 	tensors_to_log = {"probabilities": "softmax_tensor"}
@@ -82,6 +82,8 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
 
     print ('looking for segment ', segmentNumber)
 
+    threatContainingCount = 0
+
     for image_path in image_path_list:
     	print('about to create a body scan with filepath ', image_path)
         bs = BodyScan(image_path)
@@ -97,6 +99,18 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
 
     shuffle(data_label_stream)
 
+    (trainingData, trainingLabels, testingData, testingLabels) = divide_data_for_high_threat_concentration(data_label_stream)
+
+    # Convert to numpy arrays
+    trainingData = np.array(trainingData)
+    trainingLabels = np.array(trainingLabels)
+    testingData = np.array(testingData)
+    testingLabels = np.array(testingLabels)
+
+    return (trainingData, trainingLabels, testingData, testingLabels)
+
+def divide_data_stream_50_50(data_label_stream):
+
     data_stream = []
     label_stream = []
 
@@ -104,13 +118,6 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
     	data_stream.append(data_label[0])
     	label_stream.append(data_label[1])
 
-    print ('data stream length: ', len(data_stream))
-    print ('label stream length: ', len(label_stream))
-
-    print('type data stream: ',type(data_stream[0]))
-    print('type label stream: ',type(label_stream[0]))
-
-    print('labels: ',label_stream)
     # Determine indexing length
     trainingLength = int(len(data_label_stream)/2)
 
@@ -125,11 +132,59 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
     print('training labels: ',trainingLabels)
     print('testing labels: ',testingLabels)
 
-    # Convert to numpy arrays
-    trainingData = np.array(trainingData)
-    trainingLabels = np.array(trainingLabels)
-    testingData = np.array(testingData)
-    testingLabels = np.array(testingLabels)
+    return (trainingData, trainingLabels, testingData, testingLabels)
+
+def divide_data_for_high_threat_concentration(data_label_stream):
+    # Determine half amount
+    trainingLength = int(len(data_label_stream)/2)
+
+    blocksWithThreat = []
+    blocksWithNoThreat = []
+
+    for data_label in data_label_stream:
+    	if(data_label[1]):
+    		blocksWithThreat.append(data_label)
+    	else:
+    		blocksWithNoThreat.append(data_label)
+
+
+    # train on .25 threats and .75 no threats
+    numTrainThreats = int(len(blocksWithThreat)/2)
+    numTrainNoThreat = numTrainThreats * 3
+
+    trainingData = []
+    trainingLabels = []
+    testingData = []
+    testingLabels = []
+
+    # NOTE: hopefully order doesn't matter here b/c the CNN shuffles
+    count = 0
+    for block_label in blocksWithThreat:
+    	if count > numTrainThreats:
+    		testingData.append(block_label[0])
+    		testingLabels.append(block_label[1])
+    	else:
+    		trainingData.append(block_label[0])
+    		trainingLabels.append(block_label[1])
+		count = count +1
+
+    count = 0
+    for block_label in blocksWithNoThreat:
+    	if count > numTrainNoThreat:
+    		testingData.append(block_label[0])
+    		testingLabels.append(block_label[1])
+    	else:
+    		trainingData.append(block_label[0])
+    		trainingLabels.append(block_label[1])
+		count = count +1
+
+    print('training data length ', len(trainingData))
+    print('training labels length ', len(trainingLabels))
+    print('testing data length ', len(testingData))
+    print('testing labels length ', len(testingLabels))
+
+    print('training labels: ', trainingLabels)
+    print('testing labels: ', testingLabels)
 
     return (trainingData, trainingLabels, testingData, testingLabels)
 
@@ -219,6 +274,38 @@ def cnn_model_fn(features, labels, mode):
 	      labels=labels, predictions=predictions["classes"])}
 	return tf.estimator.EstimatorSpec(
 	  mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+
+	# Add FP/FN metrics (for EVAL mode)
+	predicted = tf.round(tf.nn.sigmoid(logits))
+	actual = labels
+	    
+	# Count true positives, true negatives, false positives and false negatives.
+	tp = tf.count_nonzero(predicted * actual)
+	tn = tf.count_nonzero((predicted - 1) * (actual - 1))
+	fp = tf.count_nonzero(predicted * (actual - 1))
+	fn = tf.count_nonzero((predicted - 1) * actual)
+
+	print ('tp: ', tp)
+	print ('tn: ', tn)
+	print ('fp: ', fp)
+	print ('fn: ', fn)
+	
+	# Calculate accuracy, precision, recall and F1 score.
+	accuracy = (tp + tn) / (tp + fp + fn + tn)
+	precision = tp / (tp + fp)
+	recall = tp / (tp + fn)
+	fmeasure = (2 * precision * recall) / (precision + recall)
+
+	# Add metrics to TensorBoard.    
+	tf.summary.scalar('Accuracy', accuracy)
+	tf.summary.scalar('Precision', precision)
+	tf.summary.scalar('Recall', recall)
+	tf.summary.scalar('f-measure', fmeasure)
+
+	print ('Accuracy: ', accuracy)
+	print ('Precision: ', precision)
+	print ('Recall: ', recall)
+	print ('f-measure: ', fmeasure)
 
 if __name__ == "__main__":
 	tf.app.run(main=main)
