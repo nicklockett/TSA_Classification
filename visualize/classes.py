@@ -17,7 +17,6 @@ import seaborn as sns
 from sklearn import svm, metrics, tree, naive_bayes
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.decomposition import PCA
-
 from constants import *
 
 
@@ -438,8 +437,9 @@ class BodyScan(object):
         #fname = "processed/" + self.person_id + "_1.png"
         #matrix = self.flatten_sum(axis=axis)
         #self.write_slice_to_img(matrix, fname)
-
-        fname = file_path + self.person_id + "_projection.png"
+        dirname = os.path.dirname(os.path.realpath(file_path))
+        fpath = os.path.join(dirname, self.person_id)
+        fname = fpath + "_projection.png"
         matrix = self.flatten_max(axis=axis)
         self.write_slice_to_img(matrix, fname)
         return(fname)
@@ -448,11 +448,13 @@ class BodyScan(object):
         """
         Given a slice, writes it to a png
         """
-        slic = slic / np.max(slic) * 255
+        slc = (slic - np.average(slic)) / np.std(slic)
+        slc = slc - np.min(slc)
+        slic = slc / np.max(slc) * 255
         if not filename.endswith(".png"):
             filename += ".png"
         with open(filename, "wb") as f:
-            w = png.Writer(512, 660, greyscale=True)
+            w = png.Writer(len(slic[0]), len(slic), greyscale=True)
             w.write(f, slic)
 
     def write_square_slice_to_img(self, slic, filename):
@@ -466,7 +468,7 @@ class BodyScan(object):
 
     def normalize(self, image):
         """
-        Take segmented tsa image and normalize pixel values to be 
+        Take segmented tsa image and normalize pixel values to be
         between 0 and 1 and returns a normalized image
         """
         MIN_BOUND = 0.0
@@ -846,11 +848,57 @@ class SupervisedClassifier(object):
         
         return sorted(threat_list, key=lambda x: x[0])
 
+    def normalize(self, image):
+        """
+        takes an image and normalizes it (0 mean, 1 variance)
+        """
+        return (image - np.average(image)) / np.std(image)
+
     def train(self):
         """
         Use SVM
         """
         pass
+
+
+class FeatureGenerator(SupervisedClassifier):
+    def generate_positive_features(self, directory, size=100, num=25):
+        """
+        Generates positive features (no threat). num is num randomly generated
+        features per file.
+        """
+        paths = self.get_filepaths(directory)
+        for path in paths:
+            if not path.endswith(".a3d"):
+                continue
+            print("Generating {}".format(path))
+            person_id = re.search(r"\/(\w+)\.", path).group(1)
+            threat_list = self.get_specific_threat_list(person_id)
+
+            is_clear = True
+            for m, k in threat_list:
+                if k == 1:
+                    is_clear = False
+                    break
+
+            if not is_clear:
+                continue
+
+            ds = int(size/2)
+            bs = BodyScan(path)
+            flattened = bs.flatten_max()
+            n = len(flattened)
+            m = len(flattened[0])
+
+            for ct in range(num):
+                x = random.randint(ds, n - 1 - ds)
+                y = random.randint(ds, m - 1 - ds)
+
+                slic = flattened[x-ds:x+ds, y-ds:y+ds]
+                bs.write_slice_to_img(slic, "positive_labels/{}_{}".format(
+                    bs.person_id,
+                    ct
+                ))
 
 
 class TestingClassifier(SupervisedClassifier):
@@ -967,6 +1015,126 @@ class TestingClassifier(SupervisedClassifier):
               % (forest_classifier, metrics.classification_report(test_labels, predicted)))
         print("Confusion matrix:\n%s" % metrics.confusion_matrix(test_labels, predicted))
 
+
+class WeakClassifiers(SupervisedClassifier):
+    """
+    Something
+    """
+    def symmetry_classifier(self):
+        """
+        The symmetry is off!
+        """
+        pass
+
+    def classifier(self):
+        """
+        """
+        pass
+
+
+class SCAdaBoost(WeakClassifiers, SupervisedClassifier):
+    """
+    An Implementation of Viola and Jones.
+    """
+    def calculate_integral_sum(self, img):
+        """
+        calculates the integral sum of the image.
+        """
+        output = np.zeros((len(img), len(img[0])))
+        output[0][0] = img[0][0]
+        for i in range(len(img)):
+            for j in range(len(img[0])):
+                output[i][j] = img[i][j]
+                if (j - 1 >= 0):
+                    output[i][j] += output[i][j - 1]
+                if (i - 1 >= 0):
+                    output[i][j] += output[i - 1][j]
+                if (i - 1 >= 0) and (j - 1 >= 0):
+                    output[i][j] += output[i - 1][j - 1]
+
+        return output
+
+    def get_sum(self, img, x1, y1, x2, y2):
+        """
+        given (x1, y1) and (x2, y2) and integral image,
+        returns the sum within that square.
+        """
+        S = img[x1][y1]
+        S += img[x2][y2]
+        S -= img[x1][y2]
+        S -= img[x2][y1]
+
+        return S
+
+    def generate_features(self, img):
+        """
+        given a square image with 0 mean and 1 variance, (use 24)
+        returns a set of features with haar-like feature vector.
+        """
+        # Preprocess the image
+        i_img = self.calculate_integral_sum(img)
+
+        features = []
+
+        n = len(img)  # viola and jones uses 24 pixels here.
+        for i in range(n):
+            for j in range(n):
+                for w in range(n):
+                    for h in range(n):
+                        if i + h - 1 < n and j + 2 * w - 1 < n:
+                            S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+                            S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
+
+                            features.append((1, i, j, w, h, S1 - S2))
+                        if i + h - 1 < 24 and j + 3 * w - 1 < 24:
+                            S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+                            S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
+                            S3 = self.get_sum(i_img, i, i + h - 1, j + 2 * w, j + 3 * w -1)
+
+                            features.append((2, i, j, w, h, S1 - S2 + S3))
+
+    pass
+
+
+class OneClassSVM(SupervisedClassifier):
+    def load_features(self, directory, num=None):
+        filepaths = self.get_filepaths(directory)
+        features = []
+        ct = 0
+        for fp in filepaths:
+            if num:
+                if ct > num:
+                    break
+                ct += 1
+            img = self.get_image_matrix(fp)
+            feat = np.ndarray.flatten(img)
+            features.append(feat)
+
+        print("positive vibes")
+        self.clf = svm.OneClassSVM(nu=0.1, kernel="rbf", gamma=0.1)
+        self.clf.fit(features)
+
+    def predict(self, filepath, size=100):
+        """
+        Scans the file and draws bounding box for threat.
+        """
+        ds = int(size/2)
+        flattened = self.get_image_matrix(filepath)
+        n = len(flattened)
+        m = len(flattened[0])
+
+        output = []
+
+        for x in range(ds, n - 1 - ds, ds):
+            for y in range(ds, m - 1 - ds, ds):
+
+                slic = flattened[x-ds:x+ds, y-ds:y+ds]
+                oned = np.ndarray.flatten(slic)
+                p = self.clf.predict([oned])
+                output.append((x, y, p))
+
+        return output
+
 # class DeepCNN(SupervisedClassifier):
 #     """
 #     This is an implementation of the deep
@@ -1074,28 +1242,5 @@ class SCPerceptron(SupervisedClassifier):
 class SCSupportVectorMachine(SupervisedClassifier):
     """
     Make dem planes
-    """
-    pass
-
-
-class WeakClassifiers(SupervisedClassifier):
-    """
-    Something
-    """
-    def symmetry_classifier(self):
-        """
-        The symmetry is off!
-        """
-        pass
-
-    def classifier(self):
-        """
-        """
-        pass
-
-
-class SCAdaBoost(WeakClassifiers, SupervisedClassifier):
-    """
-
     """
     pass
