@@ -12,6 +12,7 @@ import pandas as pd
 import scipy.stats as stats
 import png
 import re
+import math
 import random
 import seaborn as sns
 from sklearn import svm, metrics, tree, naive_bayes
@@ -49,7 +50,7 @@ class BodyScan(object):
         """
         self.filepath = filepath
         self.header = self.read_header()
-        self.person_id = re.search(r"\/(\w+)\.", filepath).group(1)
+        self.person_id = re.search(r"(\w+)\.", filepath).group(1)
         self.img_data, self.imag = self.read_img_data()  # real and imaginary
 
     def read_header(self):
@@ -872,7 +873,7 @@ class FeatureGenerator(SupervisedClassifier):
             if not path.endswith(".a3d"):
                 continue
             print("Generating {}".format(path))
-            person_id = re.search(r"\/(\w+)\.", path).group(1)
+            person_id = re.search(r"(\w+)\.", path).group(1)
             threat_list = self.get_specific_threat_list(person_id)
 
             is_clear = True
@@ -912,7 +913,7 @@ class TestingClassifier(SupervisedClassifier):
         """
         generates feature vectors from img_data (x, y)
         """
-        subject_id = re.search(r"\/(\w+)_", img_path).group(1)
+        subject_id = re.search(r"(\w+)_", img_path).group(1)
         img_data = matplotlib.image.imread(img_path)
         cropped_img = self.get_cropped_matrix(img_data)
 
@@ -1032,10 +1033,111 @@ class WeakClassifiers(SupervisedClassifier):
         pass
 
 
-class SCAdaBoost(WeakClassifiers, SupervisedClassifier):
+class SCAdaBoost(SupervisedClassifier):
     """
     An Implementation of Viola and Jones.
     """
+    def load_examples(self, pos_dir, neg_dir):
+        """
+        Loads examples from these directories.
+        in integral sum format.
+        """
+        print("loading examples")
+        x = []
+        p_files = self.get_filepaths(pos_dir)
+        n_files = self.get_filepaths(neg_dir)
+
+        for m in p_files:
+            img = self.get_image_matrix(m)
+            img = self.normalize(img)
+            img = self.calculate_integral_sum(img)
+            x.append((img, 1))
+        for m in n_files:
+            img = self.get_image_matrix(m)
+            img = self.normalize(img)
+            img = self.calculate_integral_sum(img)
+            x.append((img, -1))
+
+        self.x = x
+
+    def generate_features(self, img_path):
+        """
+        given a square image with 0 mean and 1 variance, (use 24)
+        returns a set of features with haar-like feature vector.
+        returns (sum, type, i, j, w, h)
+        """
+        # Preprocess the image
+        img = self.get_image_matrix(img_path)
+        img = self.normalize(img)
+        i_img = self.calculate_integral_sum(img)
+
+        features = []
+
+        print("Generating feature vectors")
+        n = len(img)  # viola and jones uses 24 pixels here.
+        for i in range(n):
+            for j in range(n):
+                for w in range(1, n + 1):
+                    for h in range(1, n + 1):
+                        if i + h - 1 < n and j + 2 * w - 1 < n:
+                            S = self.sum_t1(i_img, i, j, w, h)
+                            features.append((S, 1, i, j, w, h))
+
+                        if i + h - 1 < n and j + 3 * w - 1 < n:
+                            S = self.sum_t2(i_img, i, j, w, h)
+                            features.append((S, 2, i, j, w, h))
+
+                        if i + 2 * h - 1 < n and j + w - 1 < n:
+                            S = self.sum_t3(i_img, i, j, w, h)
+                            features.append((S, 3, i, j, w, h))
+
+                        if i + 3 * h - 1 < n and j + w - 1 < n:
+                            S = self.sum_t4(i_img, i, j, w, h)
+                            features.append((S, 4, i, j, w, h))
+
+                        if i + 2 * h - 1 < n and j + 2 * w - 1 < n:
+                            S = self.sum_t5(i_img, i, j, w, h)
+                            features.append((S, 5, i, j, w, h))
+
+        self.features = features
+        return features
+
+    def get_feature_vals_for_all(self, n=24):
+        """
+        herpaderp.
+        feature_vecs is a 2 dim array with [feature][x_i]
+        where x_i is the (val, label) lies.
+        """
+        print("Calculating feature vectors for all examples")
+        self.examples = []
+
+        ct = 0
+        for x in self.x:
+            fv = []
+            for f in self.features:
+                fv.append(self.scale_feature(x[0], f, n=n))
+            self.examples.append([tuple(fv), x[1], 0])
+            print("{} / {} done".format(ct, len(self.x)))
+            ct += 1
+
+    def __init__(self, labels_filepath, pos_dir, neg_dir, example_file):
+        """
+        Initializes training example matrix
+
+        initializes the following
+
+        self.features: an array of features
+        self.examples: an array of [(feature values), label, weights]
+        (weights to be initialized later.)
+        """
+        super(SCAdaBoost, self).__init__(labels_filepath)
+        self.load_examples(pos_dir, neg_dir)
+        self.generate_features(example_file)
+        img = self.get_image_matrix(example_file)
+        n = len(img)
+        self.get_feature_vals_for_all(n=n)
+        del self.x
+
     def calculate_integral_sum(self, img):
         """
         calculates the integral sum of the image.
@@ -1050,11 +1152,11 @@ class SCAdaBoost(WeakClassifiers, SupervisedClassifier):
                 if (i - 1 >= 0):
                     output[i][j] += output[i - 1][j]
                 if (i - 1 >= 0) and (j - 1 >= 0):
-                    output[i][j] += output[i - 1][j - 1]
+                    output[i][j] -= output[i - 1][j - 1]
 
         return output
 
-    def get_sum(self, img, x1, y1, x2, y2):
+    def get_sum(self, img, x1, x2, y1, y2):
         """
         given (x1, y1) and (x2, y2) and integral image,
         returns the sum within that square.
@@ -1066,34 +1168,271 @@ class SCAdaBoost(WeakClassifiers, SupervisedClassifier):
 
         return S
 
-    def generate_features(self, img):
+    def sum_t1(self, i_img, i, j, w, h):
         """
-        given a square image with 0 mean and 1 variance, (use 24)
-        returns a set of features with haar-like feature vector.
+        gets the sum of type1 feature.
         """
-        # Preprocess the image
-        i_img = self.calculate_integral_sum(img)
+        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+        S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
 
-        features = []
+        return S1 - S2
 
-        n = len(img)  # viola and jones uses 24 pixels here.
-        for i in range(n):
-            for j in range(n):
-                for w in range(n):
-                    for h in range(n):
-                        if i + h - 1 < n and j + 2 * w - 1 < n:
-                            S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-                            S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
+    def sum_t2(self, i_img, i, j, w, h):
+        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+        S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
+        S3 = self.get_sum(i_img, i, i + h - 1, j + 2 * w, j + 3 * w -1)
 
-                            features.append((1, i, j, w, h, S1 - S2))
-                        if i + h - 1 < 24 and j + 3 * w - 1 < 24:
-                            S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-                            S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
-                            S3 = self.get_sum(i_img, i, i + h - 1, j + 2 * w, j + 3 * w -1)
+        return S1 - S2 + S3
 
-                            features.append((2, i, j, w, h, S1 - S2 + S3))
+    def sum_t3(self, i_img, i, j, w, h):
+        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+        S2 = self.get_sum(i_img, i + h, i + 2 * h - 1, j, j + w - 1)
 
-    pass
+        return S1 - S2
+
+    def sum_t4(self, i_img, i, j, w, h):
+        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+        S2 = self.get_sum(i_img, i + h, i + 2 * h - 1, j, j + w - 1)
+        S3 = self.get_sum(i_img, i + 2 * h, i + 3 * h - 1, j, j + w - 1)
+
+        return S1 - S2 + S3
+
+    def sum_t5(self, i_img, i, j, w, h):
+        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
+        S2 = self.get_sum(i_img, i + h, i + 2 * h - 1, j, j + w - 1)
+        S3 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
+        S4 = self.get_sum(i_img, i + h, i + 2 * h - 1, j + w, j + 2 * w - 1)
+
+        return S1 - S2 - S3 + S4
+
+    def scale_feature(self, i_img, f, n=24):
+        """
+        given a square image and n, it scales the feature and yeah.
+        returns it with scaled sum values.
+        i_img is normalized integral sum image
+        f is the (sum, type, i, j, w, h) feature tuple.
+        """
+        e = len(i_img)
+
+        s, t, i, j, w, h = f
+
+        i = round(i * e / n)
+        j = round(j * e / n)
+
+        if t == 1:
+            a = 2 * w * h
+            h = round(h * e / n)
+            w = min(int(round(1 + 2 * w * e / n) / 2), 2 * (e - j + 1))
+
+            return self.sum_t1(i_img, i, j, w, h) * a / (2 * w * h)
+        elif t == 2:
+            a = 3 * w * h
+            h = round(h * e / n)
+            w = min(int(round(1 + 3 * w * e / n) / 3), 3 * (e - j + 1))
+
+            return self.sum_t2(i_img, i, j, w, h) * a / (3 * w * h)
+        elif t == 3:
+            a = 2 * w * h
+            w = round(w * e / n)
+            h = min(int(round(1 + 2 * h * e / n) / 2), 2 * (e - i + 1))
+
+            return self.sum_t3(i_img, i, j, w, h) * a / (2 * w * h)
+        elif t == 4:
+            a = 3 * w * h
+            w = round(w * e / n)
+            h = min(int(round(1 + 3 * h * e / n) / 3), 3 * (e - i + 1))
+
+            return self.sum_t4(i_img, i, j, w, h) * a / (3 * w * h)
+        elif t == 5:
+            a = 4 * w * h
+            w = min(int(round(1 + 2 * w * e / n) / 2), 2 * (e - j + 1))
+            h = min(int(round(1 + 2 * h * e / n) / 2), 2 * (e - i + 1))
+
+            return self.sum_t5(i_img, i, j, w, h) * a / (4 * w * h)
+        else:
+            print("FEATURE TYPE NOT FOUND")
+
+        return None
+
+    def decision_stump(self, examples):
+        """
+        examples are (pi_f * x_i, y, w) sorted, which is the feature
+        value of feature f of ith example and y is the label.
+        w is example weights
+
+        This is a weird function
+        """
+        tau = examples[0][0] - 1
+        M = 0
+        E = 2
+
+        Wpp = 0  # Positive examples bigger than thresh
+        Wpn = 0  # Positive examples lower than thresh
+        Wnp = 0  # Negative examples bigger than thresh
+        Wnn = 0  # Negative examples lower than thresh
+
+        for k in range(len(examples)):
+            fv, y, w = examples[k]
+            if fv >= tau and y == 1:
+                Wpp += w
+            elif fv < tau and y == 1:
+                Wpn += w
+            elif fv >= tau and y == -1:
+                Wnp += w
+            elif fv < tau and y == -1:
+                Wnn += w
+            else:
+                print("WOW THAT DIDN'T WORK")
+
+        j = 0
+        tau_hat = 0
+        M_hat = 0
+        n = len(examples)
+
+        while True:
+            ep = Wnp + Wpn
+            en = Wpp + Wnn
+
+            if ep < en:
+                E_hat = ep
+                T_hat = 1
+            else:
+                E_hat = en
+                T_hat = -1
+
+            if E_hat < E or E_hat == E and M_hat > M:
+                E = E_hat
+                tau = tau_hat
+                M = M_hat
+                T = T_hat
+
+            if j == n - 1:
+                break
+
+            j += 1
+            while True:
+                fv, y, w = examples[j]
+                if y == -1:
+                    Wnn += w
+                    Wpn -= w
+                else:
+                    Wnp += w
+                    Wpp -= w
+                if j == n - 1 or fv != examples[j + 1][0]:
+                    break
+                else:
+                    j += 1
+            if j == n - 1:
+                tau_hat = examples[n-1][0] + 1
+                M_hat = 0
+            else:
+                tau_hat = (examples[j][0] + examples[j + 1][0]) / 2
+                M_hat = examples[j + 1][0] - examples[j][0]
+
+        return (tau, T, E, M)
+
+    def best_stump(self):
+        """
+        w is just the weights
+        features is an array of all the features
+        returns (tau, T, E, M), feature
+        """
+        best_error = 2
+        best_stump = (0, 0, 0, -9999999)
+        best_feature_i = 0
+        for k in range(len(self.features)):
+            # get kth feature
+            examples = [(f[0][k], f[1], f[2]) for f in self.examples]
+            examples = sorted(examples)
+            stump = self.decision_stump(examples)
+
+            E = stump[2]
+            M = stump[3]
+
+            if E < best_error or (abs(E - best_error) < 0.00001 and M > best_stump[3]):
+                best_error = E
+                best_stump = stump
+                best_feature_i = k
+
+        return best_stump, best_feature_i
+
+    def eval_stump(self, stump, val):
+        """
+        evaluates h(x) using the given decision stump and value.
+        """
+        (tau, T, E, M) = stump
+        if T == 1:
+            if val >= tau:
+                return 1
+            else:
+                return -1
+        else:
+            if val < tau:
+                return 1
+            else:
+                return -1
+
+    def adaboost(self, T):
+        """
+        x is a vector of training examples in self.examples
+        DO THE ADABOOST!
+        """
+        # Initialize weights
+        for k in range(len(self.examples)):
+            self.examples[k][2] = 1 / len(self.examples)
+
+        alphas = []
+        stumps = []
+
+        for t in range(T):
+            stump, f_i = self.best_stump()
+
+            E = 0
+            for x in self.examples:
+                f_val = x[0][f_i]
+                dec = self.eval_stump(stump, f_val)
+                if dec != x[1]:
+                    E += x[2]
+
+            print(stump, E)
+            if E == 0 and t == 0:
+                return stump, f_i
+            else:
+                alphas.append((0.5) * math.log((1 - E) / E))
+                stumps.append((stump, f_i))
+                for k in range(len(self.examples)):
+                    w = self.examples[k][2]
+                    new_w = 0
+
+                    yi = self.examples[k][1]
+                    f_val = self.examples[k][0][f_i]
+                    dec = self.eval_stump(stump, f_val)
+
+                    if dec != yi:
+                        new_w = w / 2 * 1 / E
+                    else:
+                        new_w = w / 2 * 1 / (1 - E)
+
+                    self.examples[k][2] = new_w
+
+        return stumps, alphas
+
+    def show_feature(self, f, n=24):
+        """
+        shows feature.
+        """
+        s, t, x, y, w, h = f
+        img = np.zeros((n, n))
+        if t == 1:
+            for n in range(x, x + h):
+                for m in range(y, y + w):
+                    img[n][m] = 1
+            for n in range(x, x + h):
+                for m in range(y + w, y + 2 * w):
+                    img[n][m] = -1
+
+        plt.imshow(img, cmap="Greys")
+        plt.show()
 
 
 class OneClassSVM(SupervisedClassifier):
