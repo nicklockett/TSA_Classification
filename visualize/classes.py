@@ -849,6 +849,19 @@ class SupervisedClassifier(object):
         
         return sorted(threat_list, key=lambda x: x[0])
 
+    def write_slice_to_img(self, slic, filename):
+        """
+        Given a slice, writes it to a png
+        """
+        slc = (slic - np.average(slic)) / np.std(slic)
+        slc = slc - np.min(slc)
+        slic = slc / np.max(slc) * 255
+        if not filename.endswith(".png"):
+            filename += ".png"
+        with open(filename, "wb") as f:
+            w = png.Writer(len(slic[0]), len(slic), greyscale=True)
+            w.write(f, slic)
+
     def normalize(self, image):
         """
         takes an image and normalizes it (0 mean, 1 variance)
@@ -863,7 +876,7 @@ class SupervisedClassifier(object):
 
 
 class FeatureGenerator(SupervisedClassifier):
-    def generate_positive_features(self, directory, size=100, num=25):
+    def generate_negative_features(self, directory, minsize=24, maxsize=125, num=25):
         """
         Generates positive features (no threat). num is num randomly generated
         features per file.
@@ -885,21 +898,98 @@ class FeatureGenerator(SupervisedClassifier):
             if not is_clear:
                 continue
 
-            ds = int(size/2)
             bs = BodyScan(path)
             flattened = bs.flatten_max()
             n = len(flattened)
             m = len(flattened[0])
 
             for ct in range(num):
+                size = random.randint(minsize, maxsize)
+                ds = int(size/2)
                 x = random.randint(ds, n - 1 - ds)
                 y = random.randint(ds, m - 1 - ds)
 
                 slic = flattened[x-ds:x+ds, y-ds:y+ds]
-                bs.write_slice_to_img(slic, "positive_labels/{}_{}".format(
+                bs.write_slice_to_img(slic, "../data/negative_examples/{}_{}".format(
                     bs.person_id,
                     ct
                 ))
+
+    def generate_positive_features(self, precise_labels_dir, dest="../data/positive_examples"):
+        """
+        from precise labels, generates positive square features.
+        """
+        files = self.get_filepaths(precise_labels_dir)
+        for f in files:
+            x1 = y1 = x2 = y2 = None
+            if f.endswith("threatcube.txt"):
+                with open(f, "r") as file:
+                    for row in file:
+                        coords = row.strip().split()
+                        if not x1:
+                            x1 = int(coords[1])
+                        if not y1:
+                            y1 = int(coords[0])
+
+                        if x1 >= int(coords[1]):
+                            x1 = int(coords[1])
+                        else:
+                            x2 = int(coords[1])
+                        if y1 >= int(coords[0]):
+                            y1 = int(coords[0])
+                        else:
+                            y2 = int(coords[0])
+
+            # adjust it to a square
+            xdist = abs(x2 - x1)
+            ydist = abs(y2 - y1)
+
+            if xdist > ydist:
+                diff = xdist - ydist
+                while diff % 2 == 1:
+                    y1 -= 1
+                    diff = xdist - abs(y2 - y1)
+
+                y2 += int(diff / 2)
+                y1 -= int(diff / 2)
+
+                if y2 > 512:
+                    d = y2 - 512
+                    y2 -= d
+                    y1 -= d
+
+                if y1 < 0:
+                    d = 0 - y1
+                    y2 += d
+                    y1 += d
+
+            elif ydist > xdist:
+                diff = ydist - xdist
+                while diff % 2 == 1:
+                    x1 -= 1
+                    diff = ydist - abs(x2 - x1)
+
+                x2 += int(diff / 2)
+                x1 -= int(diff / 2)
+
+                if x2 > 660:
+                    d = x2 - 660
+                    x2 -= d
+                    x1 -= d
+
+                if x1 < 0:
+                    d = 0 - x1
+                    x2 += d
+                    x1 += d
+
+            # now generate file!
+            pid = re.search(r"(\w+)_\d+_threat", f).group(1)
+            reg = re.search(r"(\d+)_threat", f).group(1)
+            fname = "_" + pid + reg
+            img = self.get_image_matrix(os.path.join("D:/590Data", pid) + "_projection.png")
+            threat = img[x1:x2, y1:y2]
+
+            self.write_slice_to_img(threat, os.path.join(dest, fname))
 
 
 class TestingClassifier(SupervisedClassifier):
@@ -1113,12 +1203,12 @@ class SCAdaBoost(SupervisedClassifier):
 
         ct = 0
         for x in self.x:
+            ct += 1
             fv = []
             for f in self.features:
                 fv.append(self.scale_feature(x[0], f, n=n))
             self.examples.append([tuple(fv), x[1], 0])
             print("{} / {} done".format(ct, len(self.x)))
-            ct += 1
 
     def __init__(self, labels_filepath, pos_dir, neg_dir, example_file):
         """
@@ -1131,12 +1221,12 @@ class SCAdaBoost(SupervisedClassifier):
         (weights to be initialized later.)
         """
         super(SCAdaBoost, self).__init__(labels_filepath)
-        self.load_examples(pos_dir, neg_dir)
         self.generate_features(example_file)
-        img = self.get_image_matrix(example_file)
-        n = len(img)
-        self.get_feature_vals_for_all(n=n)
-        del self.x
+
+        # These should be run if you want to train.
+        # self.load_examples(pos_dir, neg_dir)
+        # self.get_feature_vals_for_all()
+        # del self.x
 
     def calculate_integral_sum(self, img):
         """
@@ -1161,6 +1251,15 @@ class SCAdaBoost(SupervisedClassifier):
         given (x1, y1) and (x2, y2) and integral image,
         returns the sum within that square.
         """
+        n = len(img)
+        if x1 < 0:
+            x1 = 0
+        if x2 >= n:
+            x2 = n - 1
+        if y1 < 0:
+            y1 = 0
+        if y2 >= n:
+            y2 = 0
         S = img[x1][y1]
         S += img[x2][y2]
         S -= img[x1][y2]
@@ -1212,7 +1311,7 @@ class SCAdaBoost(SupervisedClassifier):
         i_img is normalized integral sum image
         f is the (sum, type, i, j, w, h) feature tuple.
         """
-        e = len(i_img)
+        e = len(i_img) - 1
 
         s, t, i, j, w, h = f
 
@@ -1254,7 +1353,7 @@ class SCAdaBoost(SupervisedClassifier):
 
         return None
 
-    def decision_stump(self, examples):
+    def decision_stump(self, examples, f_i):
         """
         examples are (pi_f * x_i, y, w) sorted, which is the feature
         value of feature f of ith example and y is the label.
@@ -1262,22 +1361,23 @@ class SCAdaBoost(SupervisedClassifier):
 
         This is a weird function
         """
-        tau = examples[0][0] - 1
+        tau = examples[0][0][f_i] - 1
         M = 0
         E = 2
 
-        Wpp = 0  # Positive examples bigger than thresh
+        Wpp = 0  # W^+_1
         Wpn = 0  # Positive examples lower than thresh
         Wnp = 0  # Negative examples bigger than thresh
         Wnn = 0  # Negative examples lower than thresh
 
         for k in range(len(examples)):
             fv, y, w = examples[k]
+            fv = fv[f_i]
             if fv >= tau and y == 1:
                 Wpp += w
-            elif fv < tau and y == 1:
-                Wpn += w
             elif fv >= tau and y == -1:
+                Wpn += w
+            elif fv < tau and y == 1:
                 Wnp += w
             elif fv < tau and y == -1:
                 Wnn += w
@@ -1300,7 +1400,7 @@ class SCAdaBoost(SupervisedClassifier):
                 E_hat = en
                 T_hat = -1
 
-            if E_hat < E or E_hat == E and M_hat > M:
+            if E_hat < E or (E_hat == E and M_hat > M):
                 E = E_hat
                 tau = tau_hat
                 M = M_hat
@@ -1312,22 +1412,23 @@ class SCAdaBoost(SupervisedClassifier):
             j += 1
             while True:
                 fv, y, w = examples[j]
+                fv = fv[f_i]
                 if y == -1:
                     Wnn += w
                     Wpn -= w
                 else:
                     Wnp += w
                     Wpp -= w
-                if j == n - 1 or fv != examples[j + 1][0]:
+                if j == n - 1 or fv != examples[j + 1][0][f_i]:
                     break
                 else:
                     j += 1
             if j == n - 1:
-                tau_hat = examples[n-1][0] + 1
+                tau_hat = examples[n-1][0][f_i] + 1
                 M_hat = 0
             else:
-                tau_hat = (examples[j][0] + examples[j + 1][0]) / 2
-                M_hat = examples[j + 1][0] - examples[j][0]
+                tau_hat = (examples[j][0][f_i] + examples[j + 1][0][f_i]) / 2
+                M_hat = examples[j + 1][0][f_i] - examples[j][0][f_i]
 
         return (tau, T, E, M)
 
@@ -1342,14 +1443,13 @@ class SCAdaBoost(SupervisedClassifier):
         best_feature_i = 0
         for k in range(len(self.features)):
             # get kth feature
-            examples = [(f[0][k], f[1], f[2]) for f in self.examples]
-            examples = sorted(examples)
-            stump = self.decision_stump(examples)
+            self.examples.sort(key=lambda x: x[0][k])
+            stump = self.decision_stump(self.examples, k)
 
             E = stump[2]
             M = stump[3]
 
-            if E < best_error or (abs(E - best_error) < 0.00001 and M > best_stump[3]):
+            if E < best_error or ((abs(E - best_error) < 0.00001 and M > best_stump[3])):
                 best_error = E
                 best_stump = stump
                 best_feature_i = k
@@ -1372,7 +1472,7 @@ class SCAdaBoost(SupervisedClassifier):
             else:
                 return -1
 
-    def adaboost(self, T):
+    def adaboost(self, T, save_to_file=False):
         """
         x is a vector of training examples in self.examples
         DO THE ADABOOST!
@@ -1395,11 +1495,15 @@ class SCAdaBoost(SupervisedClassifier):
                     E += x[2]
 
             print(stump, E)
-            if E == 0 and t == 0:
+            if E <= 0 and t == 0:
                 return stump, f_i
             else:
-                alphas.append((0.5) * math.log((1 - E) / E))
+                alph = (0.5) * math.log((1 - E) / E)
+                alphas.append(alph)
                 stumps.append((stump, f_i))
+                if save_to_file:
+                    with open("ada_output.txt", "a") as fil:
+                        fil.write("{}|{}|{}".format(str(stump), str(f_i), str(alph)))
                 for k in range(len(self.examples)):
                     w = self.examples[k][2]
                     new_w = 0
@@ -1424,14 +1528,24 @@ class SCAdaBoost(SupervisedClassifier):
         s, t, x, y, w, h = f
         img = np.zeros((n, n))
         if t == 1:
-            for n in range(x, x + h):
-                for m in range(y, y + w):
+            for n in range(x, x + h - 1):
+                for m in range(y, y + w - 1):
                     img[n][m] = 1
-            for n in range(x, x + h):
-                for m in range(y + w, y + 2 * w):
+            for n in range(x, x + h - 1):
+                for m in range(y + w, y + 2 * w - 1):
                     img[n][m] = -1
+        if t == 2:
+            for n in range(x, x + h - 1):
+                for m in range(y, y + w - 1):
+                    img[n][m] = 1
+            for n in range(x, x + h - 1):
+                for m in range(y + w, y + 2 * w - 1):
+                    img[n][m] = -1
+            for n in range(x, x + h - 1):
+                for m in range(y + 2 * w, y + 3 * w - 1):
+                    img[n][m] = 1
 
-        plt.imshow(img, cmap="Greys")
+        plt.imshow(img)
         plt.show()
 
 
