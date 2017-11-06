@@ -1127,23 +1127,33 @@ class SCAdaBoost(SupervisedClassifier):
     """
     An Implementation of Viola and Jones.
     """
-    def load_examples(self, pos_dir, neg_dir):
+    def load_examples(self, pos_dir, neg_dir, pn=0, nn=0):
         """
         Loads examples from these directories.
         in integral sum format.
+        number of positive examples pn (choose randomly)
+        number of negative examples nn (choose randomly)
         """
         print("loading examples")
         x = []
         p_files = self.get_filepaths(pos_dir)
         n_files = self.get_filepaths(neg_dir)
 
-        for m in p_files:
-            img = self.get_image_matrix(m)
+        if pn == 0:
+            pn = len(p_files)
+        if nn == 0:
+            nn = len(n_files)
+
+        random.shuffle(p_files)
+        random.shuffle(n_files)
+
+        for k in range(pn):
+            img = self.get_image_matrix(p_files[k])
             img = self.normalize(img)
             img = self.calculate_integral_sum(img)
             x.append((img, 1))
-        for m in n_files:
-            img = self.get_image_matrix(m)
+        for k in range(nn):
+            img = self.get_image_matrix(n_files[k])
             img = self.normalize(img)
             img = self.calculate_integral_sum(img)
             x.append((img, -1))
@@ -1169,23 +1179,23 @@ class SCAdaBoost(SupervisedClassifier):
             for j in range(n):
                 for w in range(1, n + 1):
                     for h in range(1, n + 1):
-                        if i + h - 1 < n and j + 2 * w - 1 < n:
+                        if i + h < n and j + 2 * w < n:
                             S = self.sum_t1(i_img, i, j, w, h)
                             features.append((S, 1, i, j, w, h))
 
-                        if i + h - 1 < n and j + 3 * w - 1 < n:
+                        if i + h < n and j + 3 * w < n:
                             S = self.sum_t2(i_img, i, j, w, h)
                             features.append((S, 2, i, j, w, h))
 
-                        if i + 2 * h - 1 < n and j + w - 1 < n:
+                        if i + 2 * h < n and j + w < n:
                             S = self.sum_t3(i_img, i, j, w, h)
                             features.append((S, 3, i, j, w, h))
 
-                        if i + 3 * h - 1 < n and j + w - 1 < n:
+                        if i + 3 * h < n and j + w < n:
                             S = self.sum_t4(i_img, i, j, w, h)
                             features.append((S, 4, i, j, w, h))
 
-                        if i + 2 * h - 1 < n and j + 2 * w - 1 < n:
+                        if i + 2 * h < n and j + 2 * w < n:
                             S = self.sum_t5(i_img, i, j, w, h)
                             features.append((S, 5, i, j, w, h))
 
@@ -1271,36 +1281,36 @@ class SCAdaBoost(SupervisedClassifier):
         """
         gets the sum of type1 feature.
         """
-        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-        S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
+        S1 = self.get_sum(i_img, i, i + h, j, j + w)
+        S2 = self.get_sum(i_img, i, i + h, j + w, j + 2 * w)
 
         return S1 - S2
 
     def sum_t2(self, i_img, i, j, w, h):
-        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-        S2 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
-        S3 = self.get_sum(i_img, i, i + h - 1, j + 2 * w, j + 3 * w -1)
+        S1 = self.get_sum(i_img, i, i + h, j, j + w)
+        S2 = self.get_sum(i_img, i, i + h, j + w, j + 2 * w)
+        S3 = self.get_sum(i_img, i, i + h, j + 2 * w, j + 3 * w)
 
         return S1 - S2 + S3
 
     def sum_t3(self, i_img, i, j, w, h):
-        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-        S2 = self.get_sum(i_img, i + h, i + 2 * h - 1, j, j + w - 1)
+        S1 = self.get_sum(i_img, i, i + h, j, j + w)
+        S2 = self.get_sum(i_img, i + h, i + 2 * h, j, j + w)
 
         return S1 - S2
 
     def sum_t4(self, i_img, i, j, w, h):
-        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-        S2 = self.get_sum(i_img, i + h, i + 2 * h - 1, j, j + w - 1)
-        S3 = self.get_sum(i_img, i + 2 * h, i + 3 * h - 1, j, j + w - 1)
+        S1 = self.get_sum(i_img, i, i + h, j, j + w)
+        S2 = self.get_sum(i_img, i + h, i + 2 * h, j, j + w)
+        S3 = self.get_sum(i_img, i + 2 * h, i + 3 * h, j, j + w)
 
         return S1 - S2 + S3
 
     def sum_t5(self, i_img, i, j, w, h):
-        S1 = self.get_sum(i_img, i, i + h - 1, j, j + w - 1)
-        S2 = self.get_sum(i_img, i + h, i + 2 * h - 1, j, j + w - 1)
-        S3 = self.get_sum(i_img, i, i + h - 1, j + w, j + 2 * w - 1)
-        S4 = self.get_sum(i_img, i + h, i + 2 * h - 1, j + w, j + 2 * w - 1)
+        S1 = self.get_sum(i_img, i, i + h, j, j + w)
+        S2 = self.get_sum(i_img, i + h, i + 2 * h, j, j + w)
+        S3 = self.get_sum(i_img, i, i + h, j + w, j + 2 * w)
+        S4 = self.get_sum(i_img, i + h, i + 2 * h, j + w, j + 2 * w)
 
         return S1 - S2 - S3 + S4
 
@@ -1311,7 +1321,7 @@ class SCAdaBoost(SupervisedClassifier):
         i_img is normalized integral sum image
         f is the (sum, type, i, j, w, h) feature tuple.
         """
-        e = len(i_img) - 1
+        e = len(i_img)
 
         s, t, i, j, w, h = f
 
@@ -1503,7 +1513,7 @@ class SCAdaBoost(SupervisedClassifier):
                 stumps.append((stump, f_i))
                 if save_to_file:
                     with open("ada_output.txt", "a") as fil:
-                        fil.write("{}|{}|{}".format(str(stump), str(f_i), str(alph)))
+                        fil.write("{}|{}|{}\n".format(str(stump), str(f_i), str(alph)))
                 for k in range(len(self.examples)):
                     w = self.examples[k][2]
                     new_w = 0
@@ -1528,25 +1538,121 @@ class SCAdaBoost(SupervisedClassifier):
         s, t, x, y, w, h = f
         img = np.zeros((n, n))
         if t == 1:
-            for n in range(x, x + h - 1):
-                for m in range(y, y + w - 1):
+            for n in range(x, x + h):
+                for m in range(y, y + w):
                     img[n][m] = 1
-            for n in range(x, x + h - 1):
-                for m in range(y + w, y + 2 * w - 1):
+            for n in range(x, x + h):
+                for m in range(y + w, y + 2 * w):
                     img[n][m] = -1
         if t == 2:
-            for n in range(x, x + h - 1):
-                for m in range(y, y + w - 1):
+            for n in range(x, x + h):
+                for m in range(y, y + w):
                     img[n][m] = 1
-            for n in range(x, x + h - 1):
-                for m in range(y + w, y + 2 * w - 1):
+            for n in range(x, x + h):
+                for m in range(y + w, y + 2 * w):
                     img[n][m] = -1
-            for n in range(x, x + h - 1):
-                for m in range(y + 2 * w, y + 3 * w - 1):
+            for n in range(x, x + h):
+                for m in range(y + 2 * w, y + 3 * w):
+                    img[n][m] = 1
+        if t == 3:
+            for n in range(x, x + h):
+                for m in range(y, y + w):
+                    img[n][m] = 1
+            for n in range(x + h, x + 2 * h):
+                for m in range(y, y + w):
+                    img[n][m] = -1
+        if t == 4:
+            for n in range(x, x + h):
+                for m in range(y, y + w):
+                    img[n][m] = 1
+            for n in range(x + h, x + 2 * h):
+                for m in range(y, y + w):
+                    img[n][m] = -1
+            for n in range(x + 2 * h, x + 3 * h):
+                for m in range(y, y + w):
+                    img[n][m] = 1
+        if t == 5:
+            for n in range(x, x + h):
+                for m in range(y, y + w):
+                    img[n][m] = 1
+            for n in range(x + h, x + 2 * h):
+                for m in range(y, y + w):
+                    img[n][m] = -1
+            for n in range(x, x + h):
+                for m in range(y + w, y + 2 * w):
+                    img[n][m] = -1
+            for n in range(x + h, x + 2 * h):
+                for m in range(y + w, y + 2 * w):
                     img[n][m] = 1
 
         plt.imshow(img)
         plt.show()
+
+    def classify(self, img, classifiers):
+        """
+        uses the array of weak classifiers to classify.
+        [(stump, f_i, alpha)]
+        """
+        i_img = self.calculate_integral_sum(img)
+        output = 0
+        for stump, f_i, alpha in classifiers:
+            fv = self.scale_feature(i_img, self.features[f_i])
+            output += self.eval_stump(stump, fv) * alpha
+
+        return np.sign(output)
+
+    def test(self, pos_dir, neg_dir):
+        """
+        tests the labels using the algorithm.
+        """
+        file = "ada_output.txt"
+        classifiers = []
+
+        with open(file, "r") as f:
+            for line in f:
+                elems = line.strip().split("|")
+                stump_strs = re.sub(r"\s+", "", elems[0].strip("(").strip(")")).split(",")
+                stump = (float(stump_strs[0]), int(stump_strs[1]), float(stump_strs[2]), float(stump_strs[3]))
+                f_i = int(elems[1])
+                alpha = float(elems[2])
+
+                classifiers.append((stump, f_i, alpha))
+
+        fps_p = self.get_filepaths(pos_dir)
+        fps_n = self.get_filepaths(neg_dir)
+
+        tn = 0
+        tp = 0
+        fp = 0
+        fn = 0
+
+        ap = len(fps_p)
+        an = len(fps_n)
+
+        for fil in fps_p:
+            img = self.get_image_matrix(fil)
+            res = self.classify(img, classifiers)
+            if res == 1:
+                tp += 1
+            else:
+                fn += 1
+
+        for fil in fps_n:
+            img = self.get_image_matrix(fil)
+            res = self.classify(img, classifiers)
+            if res == -1:
+                tn += 1
+            else:
+                fp += 1
+
+        print("Confusion Matrix:\n{}\t{}\n{}\t{}".format(tn, fp, fn, tp))
+        print("Accuracy: {}".format((tp + tn) / (ap + an)))
+        print("Misclassification: {}".format((fp + fn) / (ap + an)))
+        print("True Positive (Recall): {}".format(tp / ap))
+        print("False Positive: {}".format(fp / an))
+        print("Specificity: {}".format(tn / an))
+        print("Precision: {}".format(tp / (tp + fp)))
+        print("Prevalence: {}".format(ap / (ap + an)))
 
 
 class OneClassSVM(SupervisedClassifier):
