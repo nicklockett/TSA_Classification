@@ -46,7 +46,7 @@ def main(argv):
         neg_dir,
         "../data/negative_examples/example.png"
     )
-    ab.load_examples(pos_dir, neg_dir, 60, 140)
+    ab.load_examples(pos_dir, neg_dir, 175, 225)
     ab.get_feature_vals_for_all()
     del ab.x
     ab.adaboost(10000, True)
