@@ -878,10 +878,10 @@ class SupervisedClassifier(object):
         #TODO: values hardcoded, move to global variables
         filepath = "data/threat_cubes"
         filename = subject_id + "_" + str(segment) + "_threatcube.txt"
-
+        print (filepath+filename)
         if not os.path.exists(filepath+filename):
             return -1
-
+        print ('found file!')
         file = open(filepath+filename)
 
         file_lines = file.readlines()
