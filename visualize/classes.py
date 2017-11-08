@@ -889,13 +889,24 @@ class SupervisedClassifier(object):
         # can identify x,y,z range using just 2 points in the cube
         point_1_line = file_lines[0].split('\n')[0]
         print ('point_1_line: ', point_1_line)
-        point_1 = re.split('\t| ', point_1_line)
-        print ('point_1: ', point_1)
+        point_1_unparsed = re.split('\t| |\r', point_1_line)
+        print ('point_1_unparsed: ', point_1_unparsed)
         point_7_line = file_lines[6].split('\n')[0]
         print ('point_7_line: ', point_7_line)
-        point_7 = re.split('\t| ', point_7_line)
-        print ('point_7: ', point_7)
+        point_7_unparsed = re.split('\t| |\r', point_7_line)
+        print ('point_7_unparsed: ', point_7_unparsed)
 
+        point_1 = []
+        point_7 = []
+
+        for i in range(0,len(point_1_unparsed)):
+            if(len(is_number(point_1_unparsed[i])):
+                point_1.append(point_1_unparsed[i])
+
+        for i in range(0,len(point_7_unparsed)):
+            if(len(is_number(point_7_unparsed[i])):
+                point_7.append(point_7_unparsed[i])
+                
         # input ranges
         x_range = (int(float(point_1[0])),int(float(point_7[0])))
         y_range = (int(float(point_1[1])),int(float(point_7[1])))
@@ -903,6 +914,15 @@ class SupervisedClassifier(object):
 
         # return range tuple
         return (x_range, y_range, z_range)
+
+    def is_number(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            pass
+     
+    return False
 
     def get_threatcubes(self, subject_id):
         threatcubes = []
