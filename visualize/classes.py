@@ -900,13 +900,13 @@ class SupervisedClassifier(object):
         point_7 = []
 
         for i in range(0,len(point_1_unparsed)):
-            if(len(is_number(point_1_unparsed[i])):
+            if(len(is_number(point_1_unparsed[i]))):
                 point_1.append(point_1_unparsed[i])
 
         for i in range(0,len(point_7_unparsed)):
-            if(len(is_number(point_7_unparsed[i])):
+            if(len(is_number(point_7_unparsed[i]))):
                 point_7.append(point_7_unparsed[i])
-                
+
         # input ranges
         x_range = (int(float(point_1[0])),int(float(point_7[0])))
         y_range = (int(float(point_1[1])),int(float(point_7[1])))
