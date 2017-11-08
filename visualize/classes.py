@@ -740,7 +740,7 @@ class BodyScan(object):
 
     def generate_warped_2D_segmentation(self, fileId):
         #fileId = "fdb996a779e5d65d043eaa160ec2f09f"
-        example_file = "data/Batch_2D_warp_labels/" + fileId + "_label.nii"
+        example_file = "data/Batch_2D_warp_labels/" + fileId + "_warp.nii"
         img = nib.load(example_file)
         img_data =  img.get_data()
 
