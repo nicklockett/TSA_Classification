@@ -894,8 +894,8 @@ class SupervisedClassifier(object):
         print ('point_1: ' , point_1)
         print ('point_7: ', point_7) 
         if len(point_1[0]) > 15:
-            point_1 = point_1.split(' ')
-            point_7 = point_7.split(' ')
+            point_1 = point_1[0].split(' ')
+            point_7 = point_7[0].split(' ')
             print ('point_1 after: ' , point_1)
             print ('point_7 after: ', point_7)
 
