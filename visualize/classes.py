@@ -891,9 +891,9 @@ class SupervisedClassifier(object):
         point_7 = file_lines[6].split('\n')[0].split('\t')
 
         # because our filetypes are different...
-        if len(point_1) > 15:
-            print ('point_1: ' , point_1)
-            print ('point_7: ', point_7)
+        print ('point_1: ' , point_1)
+        print ('point_7: ', point_7) 
+        if len(point_1[0]) > 15:
             point_1 = point1.split(' ')
             point_7 = point7.split(' ')
             print ('point_1 after: ' , point_1)
