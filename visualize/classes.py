@@ -887,8 +887,8 @@ class SupervisedClassifier(object):
         file_lines = file.readlines()
 
         # can identify x,y,z range using just 2 points in the cube
-        point_1 = file_lines[0].split('\n')[0].split('\t',' ')
-        point_7 = file_lines[6].split('\n')[0].split('\t',' ')
+        point_1 = file_lines[0].split('\n')[0].split('\t| ')
+        point_7 = file_lines[6].split('\n')[0].split('\t| ')
 
         # input ranges
         x_range = (int(float(point_1[0])),int(float(point_7[0])))
