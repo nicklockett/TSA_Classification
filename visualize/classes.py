@@ -890,6 +890,15 @@ class SupervisedClassifier(object):
         point_1 = file_lines[0].split('\n')[0].split('\t')
         point_7 = file_lines[6].split('\n')[0].split('\t')
 
+        # because our filetypes are different...
+        if len(point_1) > 15:
+            print 'point_1: ' , point_1
+            print 'point_7: ', point_7
+            point_1 = point1.split(' ')
+            point_7 = point7.split(' ')
+            print 'point_1 after: ' , point_1 
+            print 'point_7 after: ', point_7
+
         # input ranges
         x_range = (int(float(point_1[0])),int(float(point_7[0])))
         y_range = (int(float(point_1[1])),int(float(point_7[1])))
