@@ -891,9 +891,9 @@ class SupervisedClassifier(object):
         point_7 = file_lines[6].split('\n')[0].split('\t')
 
         # input ranges
-        x_range = (int(point_1[0]),int(point_7[0]))
-        y_range = (int(point_1[1]),int(point_7[1]))
-        z_range = (int(point_1[2]),int(point_7[2]))
+        x_range = (int(float(point_1[0])),int(float(point_7[0])))
+        y_range = (int(float(point_1[1])),int(float(point_7[1])))
+        z_range = (int(float(point_1[2])),int(float(point_7[2])))
 
         # return range tuple
         return (x_range, y_range, z_range)
