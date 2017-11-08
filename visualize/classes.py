@@ -66,7 +66,7 @@ class BodyScan(object):
         h = dict()
 
         # read the aps file
-        with open(infile, 'r+b') as fid:
+        with open(infile, 'r') as fid:
             h['filename'] = b''.join(np.fromfile(fid, dtype = 'S1', count = 20))
             h['parent_filename'] = b''.join(np.fromfile(fid, dtype = 'S1', count = 20))
             h['comments1'] = b''.join(np.fromfile(fid, dtype = 'S1', count = 80))
