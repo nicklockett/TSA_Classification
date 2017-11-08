@@ -900,11 +900,11 @@ class SupervisedClassifier(object):
         point_7 = []
 
         for i in range(0,len(point_1_unparsed)):
-            if(len(is_number(point_1_unparsed[i]))):
+            if(len(self.is_number(point_1_unparsed[i]))):
                 point_1.append(point_1_unparsed[i])
 
         for i in range(0,len(point_7_unparsed)):
-            if(len(is_number(point_7_unparsed[i]))):
+            if(len(self.is_number(point_7_unparsed[i]))):
                 point_7.append(point_7_unparsed[i])
 
         # input ranges
@@ -915,7 +915,7 @@ class SupervisedClassifier(object):
         # return range tuple
         return (x_range, y_range, z_range)
 
-    def is_number(s):
+    def is_number(self, s):
         try:
             float(s)
             return True
