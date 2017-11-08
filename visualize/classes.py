@@ -876,7 +876,7 @@ class SupervisedClassifier(object):
 
     def get_precise_threat_from_segment(self, subject_id, segment):
         #TODO: values hardcoded, move to global variables
-        filepath = "../precise_labeling/xyfiles/threatcubes/"
+        filepath = "data/threat_cubes"
         filename = subject_id + "_" + str(segment) + "_threatcube.txt"
 
         if not os.path.exists(filepath+filename):
