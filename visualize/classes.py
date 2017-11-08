@@ -921,8 +921,7 @@ class SupervisedClassifier(object):
             return True
         except ValueError:
             pass
-     
-    return False
+        return False
 
     def get_threatcubes(self, subject_id):
         threatcubes = []
