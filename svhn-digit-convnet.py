@@ -49,6 +49,7 @@ class Model(ModelDesc):
         image, label = inputs
         is_training = get_current_tower_context().is_training
 
+        print ('training with bw: ', BITW, ' ba: ', BITA, ' bg: ', BITG)
         fw, fa, fg = get_dorefa(BITW, BITA, BITG)
 
         old_get_variable = tf.get_variable
@@ -166,7 +167,7 @@ def get_config():
                             [ScalarStats('cost'), ClassificationError()])
         ],
         model=Model(),
-        max_epoch=200,
+        max_epoch=1,
     )
 
 
@@ -178,5 +179,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     BITW, BITA, BITG = map(int, args.dorefa.split(','))
+    print ('training with bw: ', BITW, ' ba: ', BITA, ' bg: ', BITG)
     config = get_config()
     launch_train_with_config(config, SimpleTrainer())
