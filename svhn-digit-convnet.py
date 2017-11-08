@@ -49,9 +49,10 @@ class Model(ModelDesc):
         image, label = inputs
         is_training = get_current_tower_context().is_training
 
-        print ('training with bw: ', BITW, ' ba: ', BITA, ' bg: ', BITG)
+        #print ('training with bw: ', BITW, ' ba: ', BITA, ' bg: ', BITG)
         fw, fa, fg = get_dorefa(BITW, BITA, BITG)
-
+        logger.info("Traning with bw: ", BITW, " ba: ", BITA, " bg: ", BITG)
+        
         old_get_variable = tf.get_variable
 
         # monkey-patch tf.get_variable to apply fw
