@@ -55,8 +55,8 @@ class Model(ModelDesc):
         is_training = get_current_tower_context().is_training
 
         fw, fa, fg = get_dorefa(BITW, BITA, BITG)
-        logger.info("Traning with bw: ", BITW, " ba: ", BITA, " bg: ", BITG)
-
+        print ('bw: ', BITW, 'ba: ', BITA, 'bg: ', BITG)
+        
         old_get_variable = tf.get_variable
 
         # monkey-patch tf.get_variable to apply fw
