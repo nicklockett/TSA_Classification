@@ -211,11 +211,11 @@ def main(unused_argv):
 	    x={"x": train_data},
 	    y=train_labels,
 	    batch_size=100, 
-	    num_epochs=15, # changed epochs from None to 20, we'll see what this does..
+	    num_epochs=None, # changed epochs from None to 20, we'll see what this does..
 	    shuffle=True)
 	mnist_classifier.train(
 	    input_fn=train_input_fn,
-	    steps=5000, # QUESTION: why do we need so many steps here...
+	    steps=15000, # QUESTION: why do we need so many steps here...
 	    hooks=[logging_hook])
 
 	# Evaluate the model and print results
@@ -274,7 +274,7 @@ def divide_data_stream_50_50(data_label_stream):
     	label_stream.append(data_label[1])
 
     # Determine indexing length
-    trainingLength = int(len(data_label_stream)*(2/3))
+    trainingLength = int(len(data_label_stream)/2)
 
     print ('training length: ', trainingLength)
 
