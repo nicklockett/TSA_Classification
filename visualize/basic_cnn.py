@@ -233,7 +233,7 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
 
     data_label_stream = []
 
-    print (image_path_list)
+    print (len(image_path_list))
 
     print ('looking for segment ', segmentNumber)
 
