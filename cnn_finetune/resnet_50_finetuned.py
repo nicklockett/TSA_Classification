@@ -12,7 +12,7 @@ import sys
 sys.path.append('../visualize')
 from tf_dataset_creator import *
 from classes import *
-from load_cifar10 import load_cifar10_data
+#from load_cifar10 import load_cifar10_data
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
     """
@@ -177,18 +177,6 @@ if __name__ == '__main__':
     num_classes = 2
     batch_size = 16 
     nb_epoch = 10
-
-    # Load Cifar10 data. Please implement your own load_data() module for your own dataset
-    X_train_o, Y_train_o, X_valid_o, Y_valid_o = load_cifar10_data(img_rows, img_cols)
-    
-    #print(type(X_train_o))
-    #print(type(X_train_o[0]))
-    #print(X_train_o[0].shape)
-    print(type(Y_train_o))
-    print(type(Y_train_o[0]))
-    print((Y_train_o[0]))
-    print((Y_train_o.shape))
-    print "theirs: ", Y_train_o
 
     # Load training and eval data
     sc = SupervisedClassifier('../../stage1_labels.csv')
