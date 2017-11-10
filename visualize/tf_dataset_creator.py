@@ -85,9 +85,7 @@ class TensorFlowDataSetCreator:
 
     def get_image_set(self):
         # Set image list for use
-        image_path_list = ["0a83698bce92a6824dcc37c1d7fc31f5.a3d"]
-        """image_path_list = ["fbb90117079e5ada773c3d3136feede4.a3d",
-"6574d7241cad5f378da7dce9dfec4cd0.a3d",
+        image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
 "8c70cc871902ae955d740cf1b7afc3e8.a3d",
 "87ab2075c257d92ec4bcb675b11d460f.a3d",
 "f6e4d412642e5cc4fcb0f6a08b592a04.a3d",
@@ -529,7 +527,7 @@ class TensorFlowDataSetCreator:
 "ede2eaf52e9d66850db0466c855d889e.a3d",
 "e69ebd61a31b52c1ff560477534cf80b.a3d",
 "3f276a1a6cb52c371bad9a651e8e9bbf.a3d",
-"6d28ec3d68a372419e582cfb6f78c97f.a3d"]"""
+"6d28ec3d68a372419e582cfb6f78c97f.a3d"]
         return image_path_list
 
 class DataSetTSA:
