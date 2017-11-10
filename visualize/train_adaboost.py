@@ -21,6 +21,7 @@ def get_filepaths(directory):
 
     return output
 
+
 def create_max_projections():
     filepaths = get_filepaths("D:/590Data/")
     for k in filepaths:
@@ -36,8 +37,9 @@ def create_max_projections():
 
 
 def main(argv):
-    pos_dir = "../data/positive_examples"
-    neg_dir = "../data/negative_examples"
+    # create_max_projections()
+    pos_dir = "../data/positive_examples/14"
+    neg_dir = "../data/negative_examples/14"
     with open("ada_output.txt", "w") as f:
         pass
     ab = SCAdaBoost(
@@ -46,7 +48,7 @@ def main(argv):
         neg_dir,
         "../data/negative_examples/example.png"
     )
-    ab.load_examples(pos_dir, neg_dir, 175, 225)
+    ab.load_examples(pos_dir, neg_dir, 65, 65)
     ab.get_feature_vals_for_all()
     del ab.x
     ab.adaboost(10000, True)

@@ -15,6 +15,8 @@ import re
 import math
 import random
 import seaborn as sns
+import nibabel as nib
+import errno
 from sklearn import svm, metrics, tree, naive_bayes
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.decomposition import PCA
@@ -853,6 +855,12 @@ class SupervisedClassifier(object):
         """
         Given a slice, writes it to a png
         """
+        directory = os.path.dirname(os.path.realpath(filename))
+        try:
+            os.makedirs(directory)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
         slc = (slic - np.average(slic)) / np.std(slic)
         slc = slc - np.min(slc)
         slic = slc / np.max(slc) * 255
@@ -876,7 +884,7 @@ class SupervisedClassifier(object):
 
 
 class FeatureGenerator(SupervisedClassifier):
-    def generate_negative_features(self, directory, minsize=24, maxsize=125, num=25):
+    def generate_negative_features(self, directory, minsize=24, maxsize=125, num=25, thresh=0.125):
         """
         Generates positive features (no threat). num is num randomly generated
         features per file.
@@ -900,20 +908,323 @@ class FeatureGenerator(SupervisedClassifier):
 
             bs = BodyScan(path)
             flattened = bs.flatten_max()
+            flattened = self.normalize(flattened)
             n = len(flattened)
             m = len(flattened[0])
 
-            for ct in range(num):
+            ct = 0
+            while ct < num:
                 size = random.randint(minsize, maxsize)
                 ds = int(size/2)
                 x = random.randint(ds, n - 1 - ds)
                 y = random.randint(ds, m - 1 - ds)
 
                 slic = flattened[x-ds:x+ds, y-ds:y+ds]
+
+                # make sure bad data doesn't end up in the samples.
+                if np.var(slic) < thresh:
+                    continue
+
                 bs.write_slice_to_img(slic, "../data/negative_examples/{}_{}".format(
                     bs.person_id,
                     ct
                 ))
+                ct += 1
+
+    def squarize(self, x1, x2, y1, y2, xlim, ylim):
+        """
+        Squarizes the bounds
+        """
+        # adjust it to a square
+        xdist = abs(x2 - x1)
+        ydist = abs(y2 - y1)
+
+        if xdist > ydist:
+            diff = xdist - ydist
+            while diff % 2 == 1:
+                y1 -= 1
+                diff = xdist - abs(y2 - y1)
+
+            y2 += int(diff / 2)
+            y1 -= int(diff / 2)
+
+            if y2 > ylim:
+                d = y2 - ylim
+                y2 -= d
+                y1 -= d
+
+            if y1 < 0:
+                d = 0 - y1
+                y2 += d
+                y1 += d
+
+        elif ydist > xdist:
+            diff = ydist - xdist
+            while diff % 2 == 1:
+                x1 -= 1
+                diff = ydist - abs(x2 - x1)
+
+            x2 += int(diff / 2)
+            x1 -= int(diff / 2)
+
+            if x2 > xlim:
+                d = x2 - xlim
+                x2 -= d
+                x1 -= d
+
+            if x1 < 0:
+                d = 0 - x1
+                x2 += d
+                x1 += d
+
+        return (x1, x2, y1, y2)
+
+    def get_coords_from_file(self, coords_file):
+        """
+        gets the coordindates from threatcube file
+        """
+        x1 = y1 = z1 = x2 = y2 = z2 = None
+        with open(coords_file, "r") as file:
+            for row in file:
+                coords = row.strip().split()
+                if not x1:
+                    x1 = int(coords[1])
+                if not y1:
+                    y1 = int(coords[0])
+                if not z1:
+                    z1 = int(coords[2])
+
+                if x1 >= int(coords[1]):
+                    x1 = int(coords[1])
+                else:
+                    x2 = int(coords[1])
+
+                if y1 >= int(coords[0]):
+                    y1 = int(coords[0])
+                else:
+                    y2 = int(coords[0])
+
+                if z1 >= int(coords[2]):
+                    z1 = int(coords[2])
+                else:
+                    z2 = int(coords[2])
+        return (x1, x2, y1, y2, z1, z2)
+
+    def check_neighbors(self, seg_img, x, y):
+        """
+        returns True if neighbors are all same
+        returns False if neighbors aren't all same
+        """
+        val = seg_img[x][y]
+        if x > 0:
+            x1 = seg_img[x-1][y]
+            if x1 != val:
+                return False
+        if x < len(seg_img) - 1:
+            x1 = seg_img[x+1][y]
+            if x1 != val:
+                return False
+        if y > 0:
+            x1 = seg_img[x][y-1]
+            if x1 != val:
+                return False
+        if y < len(seg_img[0]) - 1:
+            x1 = seg_img[x][y+1]
+            if x1 != val:
+                return False
+
+        return True
+
+    def get_img_from_nii(self, nii_path):
+        """
+        imports the mask from nii path and processes it.
+        """
+        # load it
+        img = nib.load(nii_path)
+
+        # orient it correctly
+        seg_img = np.rot90(np.rot90(img.get_data()))
+
+        # make it into numbers
+        seg_img = seg_img / np.min(seg_img)
+
+        # fill it with integers
+        img = np.zeros(seg_img.shape, dtype=int)
+        for i in range(len(seg_img)):
+            for j in range(len(seg_img[0])):
+                img[i][j] = int(round(seg_img[i][j]))
+
+        return img
+
+    def compare_ys (self, box1, box2):
+        """
+        returns True if box1 is on the left
+        returns False if box2 is on the left
+        """
+        b1av = (box1[2] + box1[3]) / 2
+        b2av = (box2[2] + box2[3]) / 2
+
+        if b1av < b2av:
+            return True
+        else:
+            return False
+
+    def clean_up_regions(self, boxes):
+        """
+        Takes the boxes and assigns regions to them
+        """
+        output = {}
+        # 2, 4
+        res = self.compare_ys(boxes[3], boxes[4])
+        if res:
+            output[2] = boxes[3]
+            output[4] = boxes[4]
+        else:
+            output[2] = boxes[4]
+            output[4] = boxes[3]
+
+        # 1, 3
+        res = self.compare_ys(boxes[6], boxes[7])
+        if res:
+            output[1] = boxes[6]
+            output[3] = boxes[7]
+        else:
+            output[1] = boxes[7]
+            output[3] = boxes[6]
+
+        # 5
+        output[5] = boxes[8]
+
+        # 6, 7
+        res = self.compare_ys(boxes[9], boxes[10])
+        if res:
+            output[6] = boxes[9]
+            output[7] = boxes[10]
+        else:
+            output[6] = boxes[10]
+            output[7] = boxes[9]
+
+        res1 = self.compare_ys(boxes[11], boxes[12])
+        res2 = self.compare_ys(boxes[12], boxes[13])
+        res3 = self.compare_ys(boxes[11], boxes[13])
+
+        if res1 and res2 and res3:
+            output[8] = boxes[11]
+            output[9] = boxes[12]
+            output[10] = boxes[13]
+        elif res1 and not res2 and res3:
+            output[8] = boxes[11]
+            output[9] = boxes[13]
+            output[10] = boxes[12]
+        elif not res1 and res2 and res3:
+            output[8] = boxes[12]
+            output[9] = boxes[11]
+            output[10] = boxes[13]
+        elif not res1 and res2 and not res3:
+            output[8] = boxes[12]
+            output[9] = boxes[13]
+            output[10] = boxes[11]
+        elif res1 and not res2 and not res3:
+            output[8] = boxes[13]
+            output[9] = boxes[11]
+            output[10] = boxes[12]
+        else:
+            output[8] = boxes[13]
+            output[9] = boxes[12]
+            output[10] = boxes[11]
+
+        # 11, 12
+        res = self.compare_ys(boxes[14], boxes[15])
+        if res:
+            output[11] = boxes[14]
+            output[12] = boxes[15]
+        else:
+            output[11] = boxes[15]
+            output[12] = boxes[14]
+
+        # 13, 14
+        res = self.compare_ys(boxes[16], boxes[17])
+        if res:
+            output[13] = boxes[16]
+            output[14] = boxes[17]
+        else:
+            output[13] = boxes[17]
+            output[14] = boxes[16]
+
+        # 15, 16
+        res = self.compare_ys(boxes[18], boxes[19])
+        if res:
+            output[15] = boxes[18]
+            output[16] = boxes[19]
+        else:
+            output[15] = boxes[19]
+            output[16] = boxes[18]
+
+        return output
+
+    def get_bounding_boxes(self, seg_img):
+        """
+        given a seg_img, returns the bounding boxes for
+        each of the segmented region.
+        1: right hand
+        2: left hand
+        3: 2
+        4: 4
+        5: head
+        6: 1
+        7: 3
+        8: 5 / 17
+        9: 7
+        10: 6
+        11: 10
+        12: 8
+        13: 13
+        14: 12
+        15: 11
+        16: 14
+        17: 13
+        18: 15
+        19: 16
+        20: background
+        """
+        ziyi_table = {
+            3: 2,
+            4: 4,
+            6: 1,
+            7: 3,
+            8: 5,
+            9: 7,
+            10: 6,
+            11: 10,
+            12: 8,
+            13: 13,
+            14: 12,
+            15: 11,
+            16: 14,
+            17: 13,
+            18: 15,
+            19: 16
+        }
+
+        output = {}
+
+        for i in range(len(seg_img)):
+            for j in range(len(seg_img[0])):
+                val = seg_img[i][j]
+                if not self.check_neighbors(seg_img, i, j):
+                    val = 20
+                if val not in output:
+                    output[val] = [2151234, -124512, 12351234, -124612345]
+                if i < output[val][0]:
+                    output[val][0] = i
+                if i > output[val][1]:
+                    output[val][1] = i + 1
+                if j < output[val][2]:
+                    output[val][2] = j
+                if j > output[val][3]:
+                    output[val][3] = j + 1
+
+        return self.clean_up_regions(output)
 
     def generate_positive_features(self, precise_labels_dir, dest="../data/positive_examples"):
         """
@@ -921,75 +1232,75 @@ class FeatureGenerator(SupervisedClassifier):
         """
         files = self.get_filepaths(precise_labels_dir)
         for f in files:
-            x1 = y1 = x2 = y2 = None
             if f.endswith("threatcube.txt"):
-                with open(f, "r") as file:
-                    for row in file:
-                        coords = row.strip().split()
-                        if not x1:
-                            x1 = int(coords[1])
-                        if not y1:
-                            y1 = int(coords[0])
-
-                        if x1 >= int(coords[1]):
-                            x1 = int(coords[1])
-                        else:
-                            x2 = int(coords[1])
-                        if y1 >= int(coords[0]):
-                            y1 = int(coords[0])
-                        else:
-                            y2 = int(coords[0])
-
-            # adjust it to a square
-            xdist = abs(x2 - x1)
-            ydist = abs(y2 - y1)
-
-            if xdist > ydist:
-                diff = xdist - ydist
-                while diff % 2 == 1:
-                    y1 -= 1
-                    diff = xdist - abs(y2 - y1)
-
-                y2 += int(diff / 2)
-                y1 -= int(diff / 2)
-
-                if y2 > 512:
-                    d = y2 - 512
-                    y2 -= d
-                    y1 -= d
-
-                if y1 < 0:
-                    d = 0 - y1
-                    y2 += d
-                    y1 += d
-
-            elif ydist > xdist:
-                diff = ydist - xdist
-                while diff % 2 == 1:
-                    x1 -= 1
-                    diff = ydist - abs(x2 - x1)
-
-                x2 += int(diff / 2)
-                x1 -= int(diff / 2)
-
-                if x2 > 660:
-                    d = x2 - 660
-                    x2 -= d
-                    x1 -= d
-
-                if x1 < 0:
-                    d = 0 - x1
-                    x2 += d
-                    x1 += d
+                (x1, x2, y1, y2, z1, z2) = self.get_coords_from_file(f)
+            else:
+                continue
+            (xy_x1, xy_x2, xy_y1, xy_y2) = self.squarize(x1, x2, y1, y2, 660, 512)
+            (xz_x1, xz_x2, xz_z1, xz_z2) = self.squarize(x1, x2, z1, z2, 660, 512)
+            (yz_y1, yz_y2, yz_z1, yz_z2) = self.squarize(y1, y2, z1, z2, 512, 512)
 
             # now generate file!
             pid = re.search(r"(\w+)_\d+_threat", f).group(1)
             reg = re.search(r"(\d+)_threat", f).group(1)
-            fname = "_" + pid + reg
+            fname = pid + reg
             img = self.get_image_matrix(os.path.join("D:/590Data", pid) + "_projection.png")
-            threat = img[x1:x2, y1:y2]
+            threat = img[xy_x1:xy_x2, xy_y1:xy_y2]
 
             self.write_slice_to_img(threat, os.path.join(dest, fname))
+
+    def generate_features_from_seg(
+        self,
+        seg_dir="../data/2D_segmentation",
+        dest="../data",
+        data_dir="D:/590Data"
+            ):
+        """
+        Given the 2D segmentation, generates positive examples from it.
+        It is positive if it's actually a body.
+        Negative if not body part.
+        """
+        files = [f for f in self.get_filepaths(seg_dir) if f.endswith(".nii")]
+        for f in files:
+            print("Now generating from {}".format(f))
+            pid = re.search(r"(\w+)_label\.nii", f).group(1)
+            th_list = self.get_specific_threat_list(pid)
+
+            threat_list = {k: v for k, v in th_list}
+            mask = self.get_img_from_nii(f)
+
+            impath = os.path.join(data_dir, pid + "_projection.png")
+            img = self.get_image_matrix(impath)
+            try:
+                boxes = self.get_bounding_boxes(mask)
+            except:
+                continue
+            for reg, box in boxes.items():
+                is_threat = False
+                try:
+                    if threat_list[reg] == 1:
+                        is_threat = True
+                except KeyError:
+                    continue
+                if reg == 5 and threat_list[17] == 1:
+                    is_threat = True
+
+                if is_threat:
+                    subfolder = "negative_examples"
+                else:
+                    subfolder = "positive_examples"
+
+                subsub = str(reg)
+
+                sq = self.squarize(box[0], box[1], box[2], box[3], 660, 512)
+
+                example = img[sq[0]:sq[1], sq[2]:sq[3]]
+
+                outdir = os.path.join(os.path.realpath(dest), subfolder)
+                outdir = os.path.join(outdir, subsub)
+                outdir = os.path.join(outdir, pid + "_" + str(reg) + ".png")
+
+                self.write_slice_to_img(example, outdir)
 
 
 class TestingClassifier(SupervisedClassifier):
@@ -1147,16 +1458,18 @@ class SCAdaBoost(SupervisedClassifier):
         random.shuffle(p_files)
         random.shuffle(n_files)
 
-        for k in range(pn):
-            img = self.get_image_matrix(p_files[k])
-            img = self.normalize(img)
-            img = self.calculate_integral_sum(img)
-            x.append((img, 1))
-        for k in range(nn):
-            img = self.get_image_matrix(n_files[k])
-            img = self.normalize(img)
-            img = self.calculate_integral_sum(img)
-            x.append((img, -1))
+        with open("positive_examples.txt", "w") as f:
+            for k in range(pn):
+                img = self.get_image_matrix(p_files[k])
+                img = self.calculate_integral_sum(img)
+                x.append((img, 1))
+                f.write(os.path.realpath(p_files[k]) + "\n")
+        with open("negative_examples.txt", "w") as f:
+            for k in range(nn):
+                img = self.get_image_matrix(n_files[k])
+                img = self.calculate_integral_sum(img)
+                x.append((img, -1))
+                f.write(os.path.realpath(n_files[k]) + "\n")
 
         self.x = x
 
@@ -1168,7 +1481,6 @@ class SCAdaBoost(SupervisedClassifier):
         """
         # Preprocess the image
         img = self.get_image_matrix(img_path)
-        img = self.normalize(img)
         i_img = self.calculate_integral_sum(img)
 
         features = []
@@ -1242,6 +1554,7 @@ class SCAdaBoost(SupervisedClassifier):
         """
         calculates the integral sum of the image.
         """
+        img = self.normalize(img)
         output = np.zeros((len(img), len(img[0])))
         output[0][0] = img[0][0]
         for i in range(len(img)):
@@ -1588,7 +1901,7 @@ class SCAdaBoost(SupervisedClassifier):
         plt.imshow(img)
         plt.show()
 
-    def classify(self, img, classifiers):
+    def classify(self, img, classifiers, thresh=0.125):
         """
         uses the array of weak classifiers to classify.
         [(stump, f_i, alpha)]
@@ -1601,11 +1914,8 @@ class SCAdaBoost(SupervisedClassifier):
 
         return np.sign(output)
 
-    def test(self, pos_dir, neg_dir):
-        """
-        tests the labels using the algorithm.
-        """
-        file = "ada_output.txt"
+    def get_classifiers(self, filepath):
+        file = filepath
         classifiers = []
 
         with open(file, "r") as f:
@@ -1618,33 +1928,64 @@ class SCAdaBoost(SupervisedClassifier):
 
                 classifiers.append((stump, f_i, alpha))
 
+        return classifiers
+
+    def test(self, pos_dir, neg_dir, ada_output="ada_output.txt"):
+        """
+        tests the labels using the algorithm.
+        """
+        file = ada_output
+
+        self.classifiers = self.get_classifiers(file)
+        classifiers = self.classifiers
+
         fps_p = self.get_filepaths(pos_dir)
         fps_n = self.get_filepaths(neg_dir)
+
+        p_train = []
+        n_train = []
+
+        with open("positive_examples.txt", "r") as f:
+            for s in f:
+                pid = re.search(r"(\w+)_\d+\.png", s).group(1)
+                p_train.append(pid)
+        with open("negative_examples.txt", "r") as f:
+            for s in f:
+                pid = re.search(r"(\w+)_\d+\.png", s).group(1)
+                n_train.append(pid)
 
         tn = 0
         tp = 0
         fp = 0
         fn = 0
-
-        ap = len(fps_p)
-        an = len(fps_n)
+        ap = 0
+        an = 0
 
         for fil in fps_p:
+            pid = re.search(r"(\w+)_\d+\.png", fil).group(1)
+            if pid in p_train:
+                continue
             img = self.get_image_matrix(fil)
             res = self.classify(img, classifiers)
+            ap += 1
             if res == 1:
                 tp += 1
             else:
                 fn += 1
 
         for fil in fps_n:
+            pid = re.search(r"(\w+)_\d+\.png", fil).group(1)
+            if pid in n_train:
+                continue
             img = self.get_image_matrix(fil)
             res = self.classify(img, classifiers)
             if res == -1:
                 tn += 1
             else:
                 fp += 1
+            an += 1
 
+        print("Number of weak classifiers: {}".format(len(classifiers)))
         print("Confusion Matrix:\n{}\t{}\n{}\t{}".format(tn, fp, fn, tp))
         print("Accuracy: {}".format((tp + tn) / (ap + an)))
         print("Misclassification: {}".format((fp + fn) / (ap + an)))
