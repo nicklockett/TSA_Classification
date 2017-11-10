@@ -7,24 +7,27 @@ import numpy as np
 import tensorflow as tf
 from classes import *
 from dataExtraction import *
+from tf_dataset_creator import *
 from random import shuffle
 
 tf.logging.set_verbosity(tf.logging.INFO)
-block_size = 46
+block_size = 50
 
 def main(unused_argv):
 
 	# Set up tools needed
 	sc = SupervisedClassifier('../../stage1_labels.csv')
 
-	# Set image list for use
-	image_path_list = ["../../../rec/data/PSRC/Data/stage1/a3d/831600b1b6984119fc87529bf4b61ade.a3d"]
-
 	# Set segmentNumber
-	segmentNumber = 0.8
+	segmentNumber = -1
 
 	# Load training and eval data
-	(train_data, train_labels, eval_data, eval_labels) = extract2DDataSet(image_path_list, block_size, segmentNumber, sc)
+	dataCreator = TensorFlowDataSetCreator(sc)
+	dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True)
+	train_data = dataset.getTrainingData()
+	train_labels = dataset.getTrainingLabels()
+	eval_data = dataset.getTestingData()
+	eval_labels = dataset.getTestingLabels()
 
 	# Create the Estimator
 	mnist_classifier = tf.estimator.Estimator(
@@ -40,11 +43,11 @@ def main(unused_argv):
 	    x={"x": train_data},
 	    y=train_labels,
 	    batch_size=100, 
-	    num_epochs=None, # changed epochs from None to 20, we'll see what this does..
+	    num_epochs=None,
 	    shuffle=True)
 	mnist_classifier.train(
 	    input_fn=train_input_fn,
-	    steps=10000,
+	    steps=20000,
 	    hooks=[logging_hook])
 
 	# Evaluate the model and print results
@@ -55,124 +58,6 @@ def main(unused_argv):
 	    shuffle=False)
 	eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
 	print(eval_results)
-
-def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClassifier):
-    """This method returns the 2D training data, training labels, 
-    testing data, and testing labels for a particular data set"""
-
-    data_label_stream = []
-
-    print (len(image_path_list))
-
-    print ('looking for segment ', segmentNumber)
-
-    threatContainingCount = 0
-
-    for image_path in image_path_list:
-    	print('about to create a body scan with filepath ', image_path)
-        bs = BodyScan(image_path)
-        bsg = BlockStreamGenerator(bs, supervisedClassifier, blockSize = block_size)
-        block_list = bsg.generate2DBlockStreamHandLabeled()
-        print ('blocks generated ', len(block_list))
-        print (block_size)
-        for block in block_list:
-        	print (block[0].shape)
-        	if block[0].shape == (block_size, block_size):
-        		#if(segmentNumber == block[1]):
-        		data_label_stream.append((block[0], int(block[2])))
-
-    print('total data length: ',len(data_label_stream))
-
-    shuffle(data_label_stream)
-
-    (trainingData, trainingLabels, testingData, testingLabels) = divide_data_stream_50_50(data_label_stream)
-
-    # Convert to numpy arrays
-    trainingData = np.array(trainingData)
-    trainingLabels = np.array(trainingLabels)
-    testingData = np.array(testingData)
-    testingLabels = np.array(testingLabels)
-
-    return (trainingData, trainingLabels, testingData, testingLabels)
-
-def divide_data_stream_50_50(data_label_stream):
-
-    data_stream = []
-    label_stream = []
-
-    for data_label in data_label_stream:
-    	data_stream.append(data_label[0])
-    	label_stream.append(data_label[1])
-
-    # Determine indexing length
-    trainingLength = int(len(data_label_stream)/2)
-
-    print ('training length: ', trainingLength)
-
-    # Index proper sizes
-    trainingData = data_stream[:trainingLength]
-    trainingLabels = label_stream[:trainingLength]
-    testingData = data_stream[trainingLength:]
-    testingLabels = label_stream[trainingLength:]
-
-    print('training labels: ',trainingLabels)
-    print('testing labels: ',testingLabels)
-
-    return (trainingData, trainingLabels, testingData, testingLabels)
-
-def divide_data_for_high_threat_concentration(data_label_stream):
-    # Determine half amount
-    trainingLength = int(len(data_label_stream)/2)
-
-    blocksWithThreat = []
-    blocksWithNoThreat = []
-
-    for data_label in data_label_stream:
-    	if(data_label[1]):
-    		blocksWithThreat.append(data_label)
-    	else:
-    		blocksWithNoThreat.append(data_label)
-
-
-    # train on .25 threats and .75 no threats
-    numTrainThreats = int(len(blocksWithThreat)/2)
-    numTrainNoThreat = numTrainThreats * 3
-
-    trainingData = []
-    trainingLabels = []
-    testingData = []
-    testingLabels = []
-
-    # NOTE: hopefully order doesn't matter here b/c the CNN shuffles
-    count = 0
-    for block_label in blocksWithThreat:
-    	if count > numTrainThreats:
-    		testingData.append(block_label[0])
-    		testingLabels.append(block_label[1])
-    	else:
-    		trainingData.append(block_label[0])
-    		trainingLabels.append(block_label[1])
-		count = count +1
-
-    count = 0
-    for block_label in blocksWithNoThreat:
-    	if count > numTrainNoThreat:
-    		testingData.append(block_label[0])
-    		testingLabels.append(block_label[1])
-    	else:
-    		trainingData.append(block_label[0])
-    		trainingLabels.append(block_label[1])
-		count = count +1
-
-    print('training data length ', len(trainingData))
-    print('training labels length ', len(trainingLabels))
-    print('testing data length ', len(testingData))
-    print('testing labels length ', len(testingLabels))
-
-    print('training labels: ', trainingLabels)
-    print('testing labels: ', testingLabels)
-
-    return (trainingData, trainingLabels, testingData, testingLabels)
 
 # Our application logic will be added here
 def cnn_model_fn(features, labels, mode):
@@ -248,7 +133,7 @@ def cnn_model_fn(features, labels, mode):
 	# Configure the Training Op (for TRAIN mode)
 	# QUESTION: why does this training happen later?
 	if mode == tf.estimator.ModeKeys.TRAIN:
-		optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01) # Was previously .001
+		optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001) # Was previously .001
 		train_op = optimizer.minimize(
 		    loss=loss,
 		    global_step=tf.train.get_global_step())
