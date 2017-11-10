@@ -878,23 +878,23 @@ class SupervisedClassifier(object):
         #TODO: values hardcoded, move to global variables
         filepath = "data/threat_cubes/"
         filename = subject_id + "_" + str(segment) + "_threatcube.txt"
-        print (filepath+filename)
+        #print (filepath+filename)
         if not os.path.exists(filepath+filename):
             return -1
-        print ('found file!')
+        #print ('found file!')
         file = open(filepath+filename)
 
         file_lines = file.readlines()
 
         # can identify x,y,z range using just 2 points in the cube
         point_1_line = file_lines[0].split('\n')[0]
-        print ('point_1_line: ', point_1_line)
+        #print ('point_1_line: ', point_1_line)
         point_1_unparsed = re.split('\t| |\r', point_1_line)
-        print ('point_1_unparsed: ', point_1_unparsed)
+        #print ('point_1_unparsed: ', point_1_unparsed)
         point_7_line = file_lines[6].split('\n')[0]
-        print ('point_7_line: ', point_7_line)
+        #print ('point_7_line: ', point_7_line)
         point_7_unparsed = re.split('\t| |\r', point_7_line)
-        print ('point_7_unparsed: ', point_7_unparsed)
+        #print ('point_7_unparsed: ', point_7_unparsed)
 
         point_1 = []
         point_7 = []
