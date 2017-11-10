@@ -411,6 +411,12 @@ class BodyScan(object):
         """
         return np.rot90(np.max(self.img_data, axis=axis))
 
+    def flatten_var(self, thresh=3.5e-04, axis=1):
+        """
+        Flattens the 3D image to a 2d matrix using variance.
+        """
+        return np.rot90(np.var(self.img_data, axis=axis))
+
     def get_filepaths(self, directory):
         """
         retrieves a list of all filepaths from this directory
