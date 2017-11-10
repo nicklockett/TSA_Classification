@@ -10,7 +10,7 @@ class TensorFlowDataSetCreator:
     #def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, segmentNumber=-1):
      #   return CreateTrainAndTestDataAndLabels(data, channels, block_size, segmentNumber)
 
-    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, segmentNumber=-1, augment = False):
+    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, segmentNumber=-100, augment = False):
         """This method returns the 2D training data, training labels, 
         testing data, and testing labels for a particular data set"""
 
@@ -36,7 +36,7 @@ class TensorFlowDataSetCreator:
             
             for block in block_list:
                 if block[0].shape[0] == (block_size) and block[0].shape[1] == (block_size):
-                    if(segmentNumber == block[1] or segmentNumber == -1):
+                    if(segmentNumber == block[1] or segmentNumber == -100):
                         data_label_stream.append((block[0], int(block[2])))
                         if(augment): # Then add manipulated data as well
                             flipped_data = np.flip(block[0], 0) # NOTE: should probably do this seperately after it's training vs test 
