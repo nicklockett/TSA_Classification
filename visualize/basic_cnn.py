@@ -11,7 +11,7 @@ from tf_dataset_creator import *
 from random import shuffle
 
 tf.logging.set_verbosity(tf.logging.INFO)
-block_size = 50
+block_size = 0.8
 
 def main(unused_argv):
 
