@@ -3,6 +3,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plot
 import mpl_toolkits.mplot3d.axes3d as axes3d
+import scipy.misc
 
 class BlockStreamGenerator:
 
@@ -150,7 +151,7 @@ class BlockStreamGenerator:
 
         return block_stream
 
-    def generate2DBlockStreamHandLabeled3Channel(self):
+    def generate2DBlockStreamHandLabeled3Channel(self, resize=-1):
         block_stream = []
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
 
@@ -174,6 +175,17 @@ class BlockStreamGenerator:
                         data_channel_1 = image_Max[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         data_channel_2 = image_Sum[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
+
+                        if(resize!=-1):
+                            Channeled_Data = np.zeros((resize,resize, 3))
+                            data_channel_1 = scipy.misc.imresize(arr = data_channel_1, size=(resize, resize))
+                            print ('data channel size!: ',data_channel_1.shape)
+                            plt.figure()
+                            plt.imshow(data_channel_1)
+                            plt.show()
+                            data_channel_2 = scipy.misc.imresize(arr = data_channel_2, size=(resize, resize))
+                            data_channel_3 = scipy.misc.imresize(arr = data_channel_3, size=(resize, resize))
+
 
                         for r in range(0,len(data_channel_1)):
                             for c in range(0,len(data_channel_1[0])):

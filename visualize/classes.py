@@ -45,11 +45,12 @@ class BodyScan(object):
     CONTOUR_THRESH_LB = 70
     CONTOUR_THRESH_UB = 255
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, nii_filepath = "data/Batch_2D_warp_labels/"):
         """
         Initializes the BodyScan object using the file specified. Accepts
         .aps, .aps3d, .a3d, or ahi files
         """
+        self.nii_filepath = nii_filepath
         self.filepath = filepath
         self.header = self.read_header()
         self.person_id = re.search(r"\/(\w+)\.", filepath).group(1)
@@ -746,7 +747,7 @@ class BodyScan(object):
 
     def generate_warped_2D_segmentation(self, fileId):
         #fileId = "fdb996a779e5d65d043eaa160ec2f09f"
-        example_file = "data/Batch_2D_warp_labels/" + fileId + "_label.nii"
+        example_file = self.nii_filepath + fileId + "_label.nii"
         img = nib.load(example_file)
         img_data =  img.get_data()
 

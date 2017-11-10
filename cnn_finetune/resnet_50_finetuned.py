@@ -4,11 +4,14 @@ from keras.models import Sequential
 from keras.optimizers import SGD
 from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation
 from keras.layers.normalization import BatchNormalization
+from keras.utils.np_utils import to_categorical
 from keras.models import Model
 from keras import backend as K
-
 from sklearn.metrics import log_loss
-
+import sys
+sys.path.append('../visualize')
+from tf_dataset_creator import *
+from classes import *
 from load_cifar10 import load_cifar10_data
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
@@ -170,21 +173,33 @@ if __name__ == '__main__':
     # Example to fine-tune on 3000 samples from Cifar10
 
     img_rows, img_cols = 224, 224 # Resolution of inputs
-    channel = 1
-    num_classes = 1
+    channel = 3
+    num_classes = 2
     batch_size = 16 
     nb_epoch = 10
 
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
-    #X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
+    X_train_o, Y_train_o, X_valid_o, Y_valid_o = load_cifar10_data(img_rows, img_cols)
     
+    #print(type(X_train_o))
+    #print(type(X_train_o[0]))
+    #print(X_train_o[0].shape)
+    print(type(Y_train_o))
+    print(type(Y_train_o[0]))
+    print((Y_train_o[0]))
+    print((Y_train_o.shape))
+    print "theirs: ", Y_train_o
+
     # Load training and eval data
+    sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = 32, augment = False, segmentNumber = segmentNumber)
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels =3, block_size = 60, resize = 224, augment = False, segmentNumber = -100, image_number = 2, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
     X_train = dataset.getTrainingData()
-    Y_train = dataset.getTrainingLabels()
+    list_of_values_train = dataset.getTrainingLabels()
+    Y_train = to_categorical(list_of_values_train, num_classes=2)
     X_valid = dataset.getTestingData()
-    Y_valid = dataset.getTestingLabels()
+    list_of_values_test = dataset.getTestingLabels()
+    Y_valid = to_categorical(list_of_values_test, num_classes=2)
 
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
