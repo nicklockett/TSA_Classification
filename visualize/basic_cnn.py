@@ -11,7 +11,7 @@ from tf_dataset_creator import *
 from random import shuffle
 
 tf.logging.set_verbosity(tf.logging.INFO)
-block_size = 0.8
+block_size = 50
 
 def main(unused_argv):
 
@@ -20,11 +20,11 @@ def main(unused_argv):
 
 
 	# Set segmentNumber
-	segmentNumber = -1
+	segmentNumber = 0.8
 
 	# Load training and eval data
 	dataCreator = TensorFlowDataSetCreator(sc)
-	dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True)
+	dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True, segmentNumber)
 	train_data = dataset.getTrainingData()
 	train_labels = dataset.getTrainingLabels()
 	eval_data = dataset.getTestingData()
