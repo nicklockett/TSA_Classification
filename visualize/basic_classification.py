@@ -188,8 +188,7 @@ image_path_list = ["../../../rec/data/PSRC/Data/stage1/a3d/831600b1b6984119fc875
 "../../../rec/data/PSRC/Data/stage1/a3d/b414f08238785469af4ae86d24bdc75a.a3d",
 "../../../rec/data/PSRC/Data/stage1/a3d/190e91556f1e3e63fc40938bcb27d8b2.a3d",
 "../../../rec/data/PSRC/Data/stage1/a3d/5d4e4482ade1a29b502a3ad9f3a61cfc.a3d",
-"../../../rec/data/PSRC/Data/stage1/a3d/65c89a7cccabe529cc81e0ab9ddea2ce.a3d"]
-"""
+"../../../rec/data/PSRC/Data/stage1/a3d/65c89a7cccabe529cc81e0ab9ddea2ce.a3d"""]
 
 # Load training and eval data
 (train_data, train_labels, eval_data, eval_labels) = extract2DDataSet(image_path_list, block_size, segmentNumber, sc)
