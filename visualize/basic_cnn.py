@@ -18,6 +18,7 @@ def main(unused_argv):
 	# Set up tools needed
 	sc = SupervisedClassifier('../../stage1_labels.csv')
 
+
 	# Set segmentNumber
 	segmentNumber = -1
 
@@ -31,7 +32,7 @@ def main(unused_argv):
 
 	# Create the Estimator
 	mnist_classifier = tf.estimator.Estimator(
-	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_8")
+	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_7")
 
 	# Set up logging for predictions
 	tensors_to_log = {"probabilities": "softmax_tensor"}
