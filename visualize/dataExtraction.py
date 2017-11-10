@@ -159,8 +159,6 @@ class BlockStreamGenerator:
         image_Sum = self.bs.flatten_sum()
         image_Var = self.bs.flatten_var()
 
-        print 'flattened all data'
-
         threat_cubes = self.sc.get_threatcubes(individual_id)
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
 
@@ -191,8 +189,6 @@ class BlockStreamGenerator:
                         block_stream.append((Channeled_Data, region_label, is_threat))
                         if(is_threat):
                             print(region_label)
-
-        print block_stream
         return block_stream
 
     def classifyRegion2D(self, x, y, segmented_data):
