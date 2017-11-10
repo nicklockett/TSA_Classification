@@ -13,11 +13,11 @@ block_size = 44
 sc = SupervisedClassifier('../../stage1_labels.csv')
 
 # need to ingest and iterate through multiple bodies
-image_path_list = [
-	"../precise_labeling/a3d/1e4a14d2e1eb381b773446de1c0c0b7e.a3d",
-	#"../precise_labeling/a3d/1e5f7a00ff4f02b0de0ea97139b6c92e.a3d"
+image_path_list = ["../../../rec/data/PSRC/Data/stage1/a3d/831600b1b6984119fc87529bf4b61ade.a3d",
+"../../../rec/data/PSRC/Data/stage1/a3d/4b28d86db0cedb95323986f74e8fc894.a3d",
+"../../../rec/data/PSRC/Data/stage1/a3d/b93f543e66317a22645be549dc1c008a.a3d",
+"../../../rec/data/PSRC/Data/stage1/a3d/e253adde4a0a6733cbf12a8e8a17d2d0.a3d",
 ]
-
 ### Formating Data ###
 
 # right now we're just throwing all the blocks from all images into the same list which is fed to the classifier
