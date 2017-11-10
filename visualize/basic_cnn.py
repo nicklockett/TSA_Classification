@@ -233,9 +233,9 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
 
     data_label_stream = []
 
-    print (len(image_path_list))
+    #print (len(image_path_list))
 
-    print ('looking for segment ', segmentNumber)
+    #print ('looking for segment ', segmentNumber)
 
     threatContainingCount = 0
 
@@ -250,7 +250,7 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
         		#if(segmentNumber == block[1]):
         		data_label_stream.append((block[0], int(block[2])))
 
-    print('total data length: ',len(data_label_stream))
+    #print('total data length: ',len(data_label_stream))
 
     shuffle(data_label_stream)
 
@@ -276,7 +276,7 @@ def divide_data_stream_50_50(data_label_stream):
     # Determine indexing length
     trainingLength = int(len(data_label_stream)/2)
 
-    print ('training length: ', trainingLength)
+    #print ('training length: ', trainingLength)
 
     # Index proper sizes
     trainingData = data_stream[:trainingLength]
@@ -284,8 +284,8 @@ def divide_data_stream_50_50(data_label_stream):
     testingData = data_stream[trainingLength:]
     testingLabels = label_stream[trainingLength:]
 
-    print('training labels: ',trainingLabels)
-    print('testing labels: ',testingLabels)
+    #print('training labels: ',trainingLabels)
+    #print('testing labels: ',testingLabels)
 
     return (trainingData, trainingLabels, testingData, testingLabels)
 
@@ -338,8 +338,8 @@ def divide_data_for_high_threat_concentration(data_label_stream):
     print('testing data length ', len(testingData))
     print('testing labels length ', len(testingLabels))
 
-    print('training labels: ', trainingLabels)
-    print('testing labels: ', testingLabels)
+    #print('training labels: ', trainingLabels)
+    #print('testing labels: ', testingLabels)
 
     return (trainingData, trainingLabels, testingData, testingLabels)
 
