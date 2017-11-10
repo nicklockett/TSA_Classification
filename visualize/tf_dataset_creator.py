@@ -40,8 +40,6 @@ class TensorFlowDataSetCreator:
                         data_label_stream.append((block[0], int(block[2])))
                         if(augment): # Then add manipulated data as well
                             flipped_data = np.flip(block[0], 0) # NOTE: should probably do this seperately after it's training vs test 
-                            print 'flipped data: ', flipped_data
-                            print 'block data: ', block[0]
                             data_label_stream.append((flipped_data, int(block[2])))
 
         print('total data length: ',len(data_label_stream))
