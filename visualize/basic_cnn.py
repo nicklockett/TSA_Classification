@@ -10,7 +10,7 @@ from dataExtraction import *
 from random import shuffle
 
 tf.logging.set_verbosity(tf.logging.INFO)
-block_size = 45
+block_size = 46
 
 def main(unused_argv):
 
