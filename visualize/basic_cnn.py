@@ -73,7 +73,8 @@ def extract2DDataSet(image_path_list, block_size, segmentNumber, supervisedClass
         bs = BodyScan(image_path)
         bsg = BlockStreamGenerator(bs, supervisedClassifier, blockSize = block_size)
         block_list = bsg.generate2DBlockStreamHandLabeled()
-        
+        print ('blocks generated ', len(block_list))
+        print (block_size)
         for block in block_list:
         	if block[0].shape == (block_size, block_size):
         		#if(segmentNumber == block[1]):
