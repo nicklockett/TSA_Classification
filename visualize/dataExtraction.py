@@ -150,6 +150,44 @@ class BlockStreamGenerator:
 
         return block_stream
 
+    def generate2DBlockStreamHandLabeled3Channel(self):
+        block_stream = []
+        individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
+
+        image_Max = self.bs.flatten_max()
+        image_Sum = self.bs.flatten_sum()
+        image_Var = self.bs.flatten_var()
+
+        print 'flattened all data'
+
+        threat_cubes = self.sc.get_threatcubes(individual_id)
+        segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
+
+        for x in range(0, len(image_Max), self.shift):
+            for y in range(0, len(image_Max[x]), self.shift):
+                    region_label = self.classifyRegion2D(x, y, segmented_data)
+                    if(region_label!=1.0):
+                        is_threat = self.classifyThreat2D(x, y, threat_cubes)
+
+                        Channeled_Data = np.zeros((self.blockSize,self.blockSize, 3))
+
+                        data_channel_1 = image_Max[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
+                        data_channel_2 = image_Sum[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
+                        data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
+
+                        for r in range(0,len(data_channel_1)):
+                            for c in range(0,len(data_channel_1[0])):
+                                Channeled_Data[r][c][0] = data_channel_1[r][c]
+                                Channeled_Data[r][c][1] = data_channel_2[r][c]
+                                Channeled_Data[r][c][2] = data_channel_3[r][c]
+
+                        block_stream.append((Channeled_Data, region_label, is_threat))
+                        if(is_threat):
+                            print(region_label)
+
+        print block_stream
+        return block_stream
+
     def classifyRegion2D(self, x, y, segmented_data):
         return segmented_data[660-1-x][y]
 
@@ -173,6 +211,7 @@ class BlockStreamGenerator:
     def viewThreatLabels(self):
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
         threat_cubes = self.sc.get_threatcubes(individual_id)
+        print threat_cubes
         full_body_data = self.bs.img_data
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
 
@@ -188,6 +227,7 @@ class BlockStreamGenerator:
                     if(is_threat):
                     #if(region_label!=1.0 or is_threat):
                         full_body_data[x][y][z] = max_val
+                        print 'is_threat'
                     else:
                         full_body_data[x][y][z] = 0.0
 
