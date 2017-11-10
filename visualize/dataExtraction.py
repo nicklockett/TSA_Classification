@@ -180,9 +180,6 @@ class BlockStreamGenerator:
                             Channeled_Data = np.zeros((resize,resize, 3))
                             data_channel_1 = scipy.misc.imresize(arr = data_channel_1, size=(resize, resize))
                             print ('data channel size!: ',data_channel_1.shape)
-                            plt.figure()
-                            plt.imshow(data_channel_1)
-                            plt.show()
                             data_channel_2 = scipy.misc.imresize(arr = data_channel_2, size=(resize, resize))
                             data_channel_3 = scipy.misc.imresize(arr = data_channel_3, size=(resize, resize))
 
