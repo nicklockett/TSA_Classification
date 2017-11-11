@@ -139,6 +139,8 @@ class BlockStreamGenerator:
         threat_cubes = self.sc.get_threatcubes(individual_id)
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
 
+        print self.shift
+        
         for x in range(0, len(image_2D), self.shift):
             for y in range(0, len(image_2D[x]), self.shift):
                     region_label = self.classifyRegion2D(x, y, segmented_data)
