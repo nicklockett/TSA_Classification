@@ -182,7 +182,7 @@ if __name__ == '__main__':
     sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
     print('RUNNING ON ALL SEGMENTS, WITH AUGMENTATION')
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 50, resize = 224, augment = False, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 60, resize = 224, augment = False, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
     #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 50, resize = 224, image_number = 2, augment = True, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/", mode = "50/50 train") 
     X_train = dataset.getTrainingData()
     list_of_values_train = dataset.getTrainingLabels()
