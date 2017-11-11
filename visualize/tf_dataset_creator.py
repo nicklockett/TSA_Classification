@@ -1,6 +1,7 @@
 from classes import *
 from dataExtraction import *
 from random import shuffle
+import matplotlib.pyplot as plt
 import scipy.misc
 
 class TensorFlowDataSetCreator:
@@ -11,7 +12,7 @@ class TensorFlowDataSetCreator:
     #def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, segmentNumber=-1):
      #   return CreateTrainAndTestDataAndLabels(data, channels, block_size, segmentNumber)
 
-    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, augment = False, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/"):
+    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, augment = False, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/", mode = "percent"):
         """This method returns the 2D training data, training labels, 
         testing data, and testing labels for a particular data set"""
 
@@ -45,15 +46,24 @@ class TensorFlowDataSetCreator:
                     if(segmentNumber == block[1] or segmentNumber == -100):
                         data_label_stream.append((block[0], int(block[2])))
                         if(augment): # Then add manipulated data as well
-                            flipped_data = np.flip(block[0], 0) # NOTE: should probably do this seperately after it's training vs test 
+                            flipped_data = np.flip(block[0], 1) # NOTE: should probably do this seperately after it's training vs test 
                             data_label_stream.append((flipped_data, int(block[2])))
 
         print('total data length: ',len(data_label_stream))
 
+        # Note: shuffle after?
         shuffle(data_label_stream)
 
-        (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream(data_label_stream)
+        trainingData = []
+        trainingLabels = []
+        testingData = []
+        testingLabels = []
 
+        if(mode=="percent"):
+            (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream(data_label_stream)
+        if(mode=="50/50 train"):
+            (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream_50_50_train(data_label_stream)
+        
         # Convert to numpy arrays
         trainingData = np.array(trainingData)
         trainingLabels = np.array(trainingLabels)
@@ -65,6 +75,8 @@ class TensorFlowDataSetCreator:
     def divide_data_stream(self, data_label_stream, percent = .5):
         data_stream = []
         label_stream = []
+
+        print('data label stream length: ', len(data_label_stream))
 
         for data_label in data_label_stream:
             data_stream.append(data_label[0])
@@ -86,8 +98,64 @@ class TensorFlowDataSetCreator:
 
         return (trainingData, trainingLabels, testingData, testingLabels)
 
+    def divide_data_stream_50_50_train(self, data_label_stream):
+        data_stream = []
+        label_stream = []
+
+        threat_data_stream = []
+        non_threat_data_stream = []
+
+        print('data label stream length: ', len(data_label_stream))
+
+        # find number of threats
+        for data_label in data_label_stream:
+            if data_label[1] == 1:
+                threat_data_stream.append(data_label[0])
+            else:
+                non_threat_data_stream.append(data_label[0])
+
+        print('threat_data_stream length: ', len(threat_data_stream))
+        print('non_threat_data_stream length: ', len(non_threat_data_stream))
+
+
+        # use half of threats in training, half in testing
+
+        trainingData = []
+        trainingLabels = []
+        testingData = []
+        testingLabels = []
+
+        # add in threats
+        count = 0
+        for threat_data in threat_data_stream:
+            if(count < len(threat_data_stream)/2):
+                trainingData.append(threat_data)
+                trainingLabels.append(1.0)
+            else:
+                testingData.append(threat_data)
+                testingLabels.append(1.0)
+            count +=1 
+
+        # add in nonthreats
+        count = 0
+        for non_threat_data in non_threat_data_stream:
+            if(count < len(threat_data_stream)/2):
+                trainingData.append(non_threat_data)
+                trainingLabels.append(0.0)
+            else:
+                testingData.append(non_threat_data)
+                testingLabels.append(0.0)
+            count +=1 
+
+
+        print('training labels: ',trainingLabels)
+        print('testing labels: ',testingLabels)
+
+        return (trainingData, trainingLabels, testingData, testingLabels)
+
     def get_image_set(self):
         # Set image list for use
+        """image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]"""
         image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
 "8c70cc871902ae955d740cf1b7afc3e8.a3d",
 "87ab2075c257d92ec4bcb675b11d460f.a3d",

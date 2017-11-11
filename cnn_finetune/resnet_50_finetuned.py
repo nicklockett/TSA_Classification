@@ -181,8 +181,9 @@ if __name__ == '__main__':
     # Load training and eval data
     sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels =3, block_size = 60, resize = 224, augment = False, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
-    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 60, resize = 224, image_number = 2, augment = False, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
+    print('RUNNING ON 0.8 SEGMENT, WITH AUGMENTATION')
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 50, resize = 224, augment = False, segmentNumber = 0.8, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/", mode = "50/50 train")
+    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 50, resize = 224, image_number = 2, augment = True, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/", mode = "50/50 train") 
     X_train = dataset.getTrainingData()
     list_of_values_train = dataset.getTrainingLabels()
     Y_train = to_categorical(list_of_values_train, num_classes=2)

@@ -176,7 +176,7 @@ class BlockStreamGenerator:
                         data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
 
                         if(resize!=-1):
-                            Channeled_Data = np.zeros((resize,resize, 3))
+                            Channeled_Data = np.zeros((resize,resize,3))
                             data_channel_1 = scipy.misc.imresize(arr = data_channel_1, size=(resize, resize))
                             data_channel_2 = scipy.misc.imresize(arr = data_channel_2, size=(resize, resize))
                             data_channel_3 = scipy.misc.imresize(arr = data_channel_3, size=(resize, resize))
