@@ -160,6 +160,7 @@ class BlockStreamGenerator:
         image_Var = self.bs.flatten_var()
 
         threat_cubes = self.sc.get_threatcubes(individual_id)
+        print threat_cubes
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
 
         for x in range(0, len(image_Max), self.shift):
