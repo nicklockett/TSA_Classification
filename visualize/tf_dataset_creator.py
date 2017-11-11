@@ -156,8 +156,8 @@ class TensorFlowDataSetCreator:
 
     def get_image_set(self):
         # Set image list for use
-        image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]
-        return image_path_list
+        """image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]"""
+        """return image_path_list"""
         image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
 "8c70cc871902ae955d740cf1b7afc3e8.a3d",
 "87ab2075c257d92ec4bcb675b11d460f.a3d",
