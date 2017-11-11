@@ -38,11 +38,12 @@ class TensorFlowDataSetCreator:
                 if(channels == 3):
                     block_list = bsg.generate2DBlockStreamHandLabeled3Channel(resize)
             
+            real_block_size = block_size
             if(resize!=-1):
-                block_size = resize
+                real_block_size = resize
 
             for block in block_list:
-                if block[0].shape[0] == (block_size) and block[0].shape[1] == (block_size):
+                if block[0].shape[0] == (real_block_size) and block[0].shape[1] == (real_block_size):
                     if(segmentNumber == block[1] or segmentNumber == -100):
                         data_label_stream.append((block[0], int(block[2])))
                         if(augment): # Then add manipulated data as well
