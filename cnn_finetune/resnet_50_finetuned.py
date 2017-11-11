@@ -181,7 +181,8 @@ if __name__ == '__main__':
     # Load training and eval data
     sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels =3, block_size = 60, resize = 224, augment = False, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels =3, block_size = 60, resize = 224, image_number = 2, augment = False, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
+    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 60, resize = 224, image_number = 2, augment = False, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
     X_train = dataset.getTrainingData()
     list_of_values_train = dataset.getTrainingLabels()
     Y_train = to_categorical(list_of_values_train, num_classes=2)
@@ -202,7 +203,7 @@ if __name__ == '__main__':
               )
 
     # Make predictions
-    predictions_valid = model.predict(X_valid, batch_size=batch_size, verbose=1)
+    predictions_valid = model.predict(X_valid, batch_size=batch_size, verbose=2)
 
     # Cross-entropy loss score
     score = log_loss(Y_valid, predictions_valid)
