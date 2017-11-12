@@ -58,7 +58,7 @@ class TensorFlowDataSetCreator:
         # Note: shuffle after?
         shuffle(data_label_stream)
 
-        (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream(data_label_stream, block_size = real_block_size, channels = channels)
+        (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream_2(data_label_stream, block_size = real_block_size, channels = channels)
         return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
 
 
@@ -101,15 +101,12 @@ class TensorFlowDataSetCreator:
         testingLabels = np.empty(testingLength)
 
         print('data label stream length: ', len(data_label_stream))
-        print type(data_label_stream[0][0])
         count = 0
         for data_label in data_label_stream:
             if count < trainingLength:
-                print count
                 trainingData[count] = data_label[0]
                 trainingLabels[count] = data_label[1]
             else:  
-                print count - trainingLength
                 testingData[count - trainingLength] = data_label[0]
                 testingLabels[count - trainingLength] = data_label[1]
             count += 1
@@ -211,8 +208,8 @@ class TensorFlowDataSetCreator:
 
     def get_image_set(self):
         # Set image list for use
-        """image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]
-        return image_path_list"""
+        image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]
+        return image_path_list
         image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
 "8c70cc871902ae955d740cf1b7afc3e8.a3d",
 "87ab2075c257d92ec4bcb675b11d460f.a3d",
