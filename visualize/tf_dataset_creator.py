@@ -26,8 +26,12 @@ class TensorFlowDataSetCreator:
             image_path_list = image_path_list[:image_number]
         print (len(image_path_list))
 
+        real_block_size = block_size
+
+        count = 0
         for image_path in image_path_list:
-            print('about to create a body scan with filepath ', image_path)
+            count = count + 1
+            print(count, ': about to create a body scan with filepath ', image_path)
             bs = BodyScan(image_filepath + image_path, nii_filepath)
             bsg = BlockStreamGenerator(bs, self.sc, blockSize = block_size)
             block_list = []
@@ -38,7 +42,6 @@ class TensorFlowDataSetCreator:
                 if(channels == 3):
                     block_list = bsg.generate2DBlockStreamHandLabeled3Channel(resize)
             
-            real_block_size = block_size
             if(resize!=-1):
                 real_block_size = resize
 
@@ -55,7 +58,11 @@ class TensorFlowDataSetCreator:
         # Note: shuffle after?
         shuffle(data_label_stream)
 
-        trainingData = []
+        (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream(data_label_stream, block_size = real_block_size, channels = channels)
+        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
+
+
+        """trainingData = []
         trainingLabels = []
         testingData = []
         testingLabels = []
@@ -71,7 +78,55 @@ class TensorFlowDataSetCreator:
         testingData = np.array(testingData)
         testingLabels = np.array(testingLabels)
 
-        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
+        print(type(trainingData))
+        print(type(trainingData[0]))
+        print(trainingData.shape)
+
+        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)"""
+
+    def divide_data_stream_2(self, data_label_stream, block_size, channels, percent = .5):
+        data_stream = []
+        label_stream = []
+
+        # Determine indexing length
+        trainingLength = int(len(data_label_stream)*percent)
+        testingLength = len(data_label_stream) - trainingLength
+        print ('training length: ', trainingLength)
+        print ('testing length: ', trainingLength)
+
+        # Create arrays with proper sizes
+        trainingData = np.empty((trainingLength, block_size, block_size, channels))
+        trainingLabels = np.empty(trainingLength)
+        testingData = np.empty((trainingLength, block_size, block_size, channels))
+        testingLabels = np.empty(testingLength)
+
+        print('data label stream length: ', len(data_label_stream))
+        print type(data_label_stream[0][0])
+        count = 0
+        for data_label in data_label_stream:
+            if count < trainingLength:
+                print count
+                trainingData[count] = data_label[0]
+                trainingLabels[count] = data_label[1]
+            else:  
+                print count - trainingLength
+                testingData[count - trainingLength] = data_label[0]
+                testingLabels[count - trainingLength] = data_label[1]
+            count += 1
+
+        print type(trainingData)
+        print type(trainingLabels)
+
+        # Index proper sizes
+        #trainingData = data_stream[:trainingLength]
+        #trainingLabels = label_stream[:trainingLength]
+        #testingData = data_stream[trainingLength:]
+        #testingLabels = label_stream[trainingLength:]
+
+        print 'training labels: ', trainingLabels
+        print 'testing labels: ', testingLabels
+
+        return (trainingData, trainingLabels, testingData, testingLabels)
 
     def divide_data_stream(self, data_label_stream, percent = .5):
         data_stream = []
@@ -156,8 +211,8 @@ class TensorFlowDataSetCreator:
 
     def get_image_set(self):
         # Set image list for use
-        """image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]"""
-        """return image_path_list"""
+        """image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]
+        return image_path_list"""
         image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
 "8c70cc871902ae955d740cf1b7afc3e8.a3d",
 "87ab2075c257d92ec4bcb675b11d460f.a3d",
