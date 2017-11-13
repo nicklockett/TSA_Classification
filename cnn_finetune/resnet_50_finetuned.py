@@ -173,7 +173,7 @@ if __name__ == '__main__':
     # Example to fine-tune on 3000 samples from Cifar10
 
     img_rows, img_cols = 224, 224 # Resolution of inputs
-    channel = 1
+    channel = 3
     num_classes = 2
     batch_size = 16 
     nb_epoch = 10
