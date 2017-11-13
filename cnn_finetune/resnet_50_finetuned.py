@@ -195,9 +195,9 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
         
         # read in the image
-        max_image = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
-        sum_image = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
-        var_image = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
+        max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
+        sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
+        var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
 
         # convert to arrray
         #max_array = np.asarray(max_image)
