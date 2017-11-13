@@ -238,7 +238,7 @@ if __name__ == '__main__':
     nb_epoch = 10
 
     # Load training and eval data
-    sc = SupervisedClassifier('../../stage1_labels.csv')
+    """sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
     print('RUNNING ON ALL SEGMENTS, WITH AUGMENTATION')
     #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
@@ -248,15 +248,15 @@ if __name__ == '__main__':
     Y_train = to_categorical(list_of_values_train, num_classes=2)
     X_valid = dataset.getTestingData()
     list_of_values_test = dataset.getTestingLabels()
-    Y_valid = to_categorical(list_of_values_test, num_classes=2)
+    Y_valid = to_categorical(list_of_values_test, num_classes=2)"""
 
-    """filepath = "generated_blocks/block_size_56/"
+    filepath = "generated_blocks/block_size_56/"
 
     max_folder = filepath+"max/"
     sum_folder = filepath+"sum/"
     var_folder = filepath+"var/"
 
-    X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)"""
+    X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
 
     print len(X_train)
     print X_train.shape
