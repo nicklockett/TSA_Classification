@@ -12,6 +12,8 @@ import sys
 sys.path.append('../visualize')
 from tf_dataset_creator import *
 from classes import *
+import cv2
+import os
 #from load_cifar10 import load_cifar10_data
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
@@ -83,7 +85,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     x = Activation('relu')(x)
     return x
 
-def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
+def resnet50_model(img_rows, img_cols, color_type = 1, num_classes = None):
     """
     Resnet 50 Model for Keras
 
@@ -98,6 +100,7 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
       channel - 1 for grayscale, 3 for color 
       num_classes - number of class labels for our classification task
     """
+    print 'color_type: ', color_type
 
     # Handle Dimension Ordering for different backends
     global bn_axis
@@ -114,25 +117,25 @@ def resnet50_model(img_rows, img_cols, color_type=1, num_classes=None):
     x = Activation('relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
 
-    x = conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
+    x = conv_block(x, channel, [64, 64, 256], stage=2, block='a', strides=(1, 1))
+    x = identity_block(x, channel, [64, 64, 256], stage=2, block='b')
+    x = identity_block(x, channel, [64, 64, 256], stage=2, block='c')
 
-    x = conv_block(x, 3, [128, 128, 512], stage=3, block='a')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='c')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='d')
+    x = conv_block(x, channel, [128, 128, 512], stage=3, block='a')
+    x = identity_block(x, channel, [128, 128, 512], stage=3, block='b')
+    x = identity_block(x, channel, [128, 128, 512], stage=3, block='c')
+    x = identity_block(x, channel, [128, 128, 512], stage=3, block='d')
 
-    x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f')
+    x = conv_block(x, channel, [256, 256, 1024], stage=4, block='a')
+    x = identity_block(x, channel, [256, 256, 1024], stage=4, block='b')
+    x = identity_block(x, channel, [256, 256, 1024], stage=4, block='c')
+    x = identity_block(x, channel, [256, 256, 1024], stage=4, block='d')
+    x = identity_block(x, channel, [256, 256, 1024], stage=4, block='e')
+    x = identity_block(x, channel, [256, 256, 1024], stage=4, block='f')
 
-    x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
+    x = conv_block(x, channel, [512, 512, 2048], stage=5, block='a')
+    x = identity_block(x, channel, [512, 512, 2048], stage=5, block='b')
+    x = identity_block(x, channel, [512, 512, 2048], stage=5, block='c')
 
     # Fully Connected Softmax Layer
     x_fc = AveragePooling2D((7, 7), name='avg_pool')(x)
@@ -179,17 +182,25 @@ if __name__ == '__main__':
     nb_epoch = 10
 
     # Load training and eval data
-    sc = SupervisedClassifier('../../stage1_labels.csv')
+    """sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
     print('RUNNING ON ALL SEGMENTS, WITH AUGMENTATION')
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
-    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 50, resize = 224, image_number = 2, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
+    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, image_number = 2, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
     X_train = dataset.getTrainingData()
     list_of_values_train = dataset.getTrainingLabels()
     Y_train = to_categorical(list_of_values_train, num_classes=2)
     X_valid = dataset.getTestingData()
     list_of_values_test = dataset.getTestingLabels()
-    Y_valid = to_categorical(list_of_values_test, num_classes=2)
+    Y_valid = to_categorical(list_of_values_test, num_classes=2)"""
+
+    filepath = "generated_blocks/block_size_56/"
+
+    max_folder = filepath+"max/"
+    min_folder = filepath+"min/"
+    var_folder = filepath+"var/"
+
+    X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder, min_folder, var_folder, resize)
 
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
@@ -209,3 +220,51 @@ if __name__ == '__main__':
     # Cross-entropy loss score
     score = log_loss(Y_valid, predictions_valid)
 
+def load_images_from_folder(max_folder, min_folder, var_folder, resize):
+
+    max_image_filenames = os.listdir(max_folder)
+    min_image_filenames = os.listdir(min_folder)
+    var_image_filenames = os.listdir(var_folder)
+
+    training_length = len(max_image_filenames/2)
+    testing_lenth = len(max_image_filenames) - training_length
+
+    X_train = np.empty((training_length, resize, resize, channels))
+    Y_train = np.empty(training_length)
+    X_test = np.empty((testing_lenth, resize, resize, channels))
+    Y_test = np.empty(testing_lenth)
+
+    for index in range(0,len(max_image_filenames)):
+
+        max_image_filename = max_image_filenames[index]
+        min_image_filename = min_image_filenames[index]
+        var_image_filename = var_image_filenames[index]
+
+        file_id, channel_type, is_threat, region, x, y = filename.split("_")
+        
+        # read in the image
+        max_image = cv2.imread(os.path.join(max_folder,max_image_filename))
+        min_image = cv2.imread(os.path.join(min_folder,min_image_filename))
+        var_image = cv2.imread(os.path.join(var_folder,var_image_filename))
+
+        # resize the image
+        Channeled_Data = np.zeros((resize,resize,3))
+        data_channel_1 = scipy.misc.imresize(arr = data_channel_1, size=(resize, resize))
+        data_channel_2 = scipy.misc.imresize(arr = data_channel_2, size=(resize, resize))
+        data_channel_3 = scipy.misc.imresize(arr = data_channel_3, size=(resize, resize))
+
+        # add all the channels to the channeled data
+        for r in range(0,len(data_channel_1)):
+            for c in range(0,len(data_channel_1[0])):
+                Channeled_Data[r][c][0] = data_channel_1[r][c]
+                Channeled_Data[r][c][1] = data_channel_2[r][c]
+                Channeled_Data[r][c][2] = data_channel_3[r][c]
+
+        if(index < training_length):
+            X_train[index] = Channeled_Data
+            Y_train[index] = int(is_threat)
+        else:
+            X_test[index - training_length] = Channeled_Data
+            Y_test[index - training_length] = int(is_threat)
+
+        return X_train, Y_train, X_test, Y_test
