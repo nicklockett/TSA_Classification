@@ -177,7 +177,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
     sum_image_filenames = os.listdir(sum_folder)
     var_image_filenames = os.listdir(var_folder)
 
-    training_length = len(max_image_filenames/2)
+    training_length = len(max_image_filenames)/2
     testing_lenth = len(max_image_filenames) - training_length
 
     X_train = np.empty((training_length, resize, resize, channels))
