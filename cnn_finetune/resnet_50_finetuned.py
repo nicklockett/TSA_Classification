@@ -219,7 +219,7 @@ def load_images_from_folder(max_folder, min_folder, var_folder, resize):
             Y_test[index - training_length] = int(is_threat)
 
         return X_train, Y_train, X_test, Y_test
-        
+
 if __name__ == '__main__':
 
     # Example to fine-tune on 3000 samples from Cifar10
@@ -249,7 +249,7 @@ if __name__ == '__main__':
     min_folder = filepath+"min/"
     var_folder = filepath+"var/"
 
-    X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder, min_folder, var_folder, resize)
+    X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder, min_folder, var_folder, img_rows)
 
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
