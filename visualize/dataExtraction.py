@@ -157,7 +157,7 @@ class BlockStreamGenerator:
         return block_stream
 
     def writeBlockAsImage(self, block, filepath, filename):
-        im = Image.fromarray(block).convert2byte()
+        im = Image.fromarray(block)
         im.save("hi",format = "SPIDER")
         print 'image '+ filename +' placed in '+ filepath
 
