@@ -198,11 +198,16 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         sum_image = cv2.imread(os.path.join(sum_folder,sum_image_filename))
         var_image = cv2.imread(os.path.join(var_folder,var_image_filename))
 
+        # convert to arrray
+        max_array = np.asarray(max_image)
+        sum_array = np.asarray(sum_image)
+        var_array = np.asarray(var_image)
+
         # resize the image
         Channeled_Data = np.zeros((resize,resize,3))
-        data_channel_1 = scipy.misc.imresize(arr = data_channel_1, size=(resize, resize))
-        data_channel_2 = scipy.misc.imresize(arr = data_channel_2, size=(resize, resize))
-        data_channel_3 = scipy.misc.imresize(arr = data_channel_3, size=(resize, resize))
+        data_channel_1 = scipy.misc.imresize(arr = max_array, size=(resize, resize))
+        data_channel_2 = scipy.misc.imresize(arr = sum_array, size=(resize, resize))
+        data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
 
         # add all the channels to the channeled data
         for r in range(0,len(data_channel_1)):
