@@ -191,9 +191,9 @@ class BlockStreamGenerator:
                         filepath_max = "generated_blocks/block_size_56/max/"
                         filepath_max = "generated_blocks/block_size_56/sum/"
                         filepath_max = "generated_blocks/block_size_56/var/"
-                        filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)+"_"+str(x)+"_"+str(y)+"_"+str(z)
-                        filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)+"_"+str(x)+"_"+str(y)+"_"+str(z)
-                        filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)+"_"+str(x)+"_"+str(y)+"_"+str(z)
+                        filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)+"_"+str(x)+"_"+str(y)
+                        filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)+"_"+str(x)+"_"+str(y)
+                        filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)+"_"+str(x)+"_"+str(y)
                         self.writeBlockAsImage(data_channel_1, filepath_max, filename_max)
                         self.writeBlockAsImage(data_channel_2, filepath_sum, filename_sum)
                         self.writeBlockAsImage(data_channel_3, filepath_var, filename_var)
