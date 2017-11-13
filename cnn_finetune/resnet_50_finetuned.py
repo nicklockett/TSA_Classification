@@ -171,10 +171,10 @@ def resnet50_model(img_rows, img_cols, color_type = 1, num_classes = None):
   
     return model
 
-def load_images_from_folder(max_folder, min_folder, var_folder, resize):
+def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
 
     max_image_filenames = os.listdir(max_folder)
-    min_image_filenames = os.listdir(min_folder)
+    sum_image_filenames = os.listdir(sum_folder)
     var_image_filenames = os.listdir(var_folder)
 
     training_length = len(max_image_filenames/2)
@@ -188,14 +188,14 @@ def load_images_from_folder(max_folder, min_folder, var_folder, resize):
     for index in range(0,len(max_image_filenames)):
 
         max_image_filename = max_image_filenames[index]
-        min_image_filename = min_image_filenames[index]
+        sum_image_filename = sum_image_filenames[index]
         var_image_filename = var_image_filenames[index]
 
         file_id, channel_type, is_threat, region, x, y = filename.split("_")
         
         # read in the image
         max_image = cv2.imread(os.path.join(max_folder,max_image_filename))
-        min_image = cv2.imread(os.path.join(min_folder,min_image_filename))
+        sum_image = cv2.imread(os.path.join(sum_folder,sum_image_filename))
         var_image = cv2.imread(os.path.join(var_folder,var_image_filename))
 
         # resize the image
@@ -246,10 +246,10 @@ if __name__ == '__main__':
     filepath = "generated_blocks/block_size_56/"
 
     max_folder = filepath+"max/"
-    min_folder = filepath+"min/"
+    sum_folder = filepath+"sum/"
     var_folder = filepath+"var/"
 
-    X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder, min_folder, var_folder, img_rows)
+    X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
 
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
