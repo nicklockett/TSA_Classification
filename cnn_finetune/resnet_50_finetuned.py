@@ -191,7 +191,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         sum_image_filename = sum_image_filenames[index]
         var_image_filename = var_image_filenames[index]
 
-        file_id, channel_type, is_threat, region, x, y = filename.split("_")
+        file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
         
         # read in the image
         max_image = cv2.imread(os.path.join(max_folder,max_image_filename))
