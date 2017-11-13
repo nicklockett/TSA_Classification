@@ -1857,12 +1857,12 @@ class SCAdaBoost(SupervisedClassifier):
                     E += x[2]
 
             if E == 0:
-                E = 0.000000000000001
-            if E <= 0.000000000000001 and t == 0:
+                E = 1e-16
+            if E <= 1e-16 and t == 0:
                 return stump, f_i
             else:
                 alph = (0.5) * math.log((1 - E) / E)
-                print(stump[2], E, f_i, alph)
+                print("{}\t{}\t{}\t{}\t{}".format(E, stump[3], stump[1], f_i, alph))
                 alphas.append(alph)
                 stumps.append((stump, f_i))
                 if save_to_file:
@@ -1942,6 +1942,12 @@ class SCAdaBoost(SupervisedClassifier):
         plt.imshow(img)
         plt.show()
 
+    def show_feature_num(self, f_i):
+        """
+        shows the ith index's feature.
+        """
+        self.show_feature(self.features[f_i])
+
     def classify(self, img, classifiers, thresh=0.125):
         """
         uses the array of weak classifiers to classify.
@@ -1988,11 +1994,11 @@ class SCAdaBoost(SupervisedClassifier):
 
         with open("positive_examples.txt", "r") as f:
             for s in f:
-                pid = re.search(r"(\w+)_\d+\.png", s).group(1)
+                pid = re.search(r"(\w+)_\d+\.png", s).group(0)
                 p_train.append(pid)
         with open("negative_examples.txt", "r") as f:
             for s in f:
-                pid = re.search(r"(\w+)_\d+\.png", s).group(1)
+                pid = re.search(r"(\w+)_\d+\.png", s).group(0)
                 n_train.append(pid)
 
         tn = 0
@@ -2003,7 +2009,7 @@ class SCAdaBoost(SupervisedClassifier):
         an = 0
 
         for fil in fps_p:
-            pid = re.search(r"(\w+)_\d+\.png", fil).group(1)
+            pid = re.search(r"(\w+)_\d+\.png", fil).group(0)
             if pid in p_train:
                 continue
             img = self.get_image_matrix(fil)
@@ -2015,7 +2021,7 @@ class SCAdaBoost(SupervisedClassifier):
                 fn += 1
 
         for fil in fps_n:
-            pid = re.search(r"(\w+)_\d+\.png", fil).group(1)
+            pid = re.search(r"(\w+)_\d+\.png", fil).group(0)
             if pid in n_train:
                 continue
             img = self.get_image_matrix(fil)
