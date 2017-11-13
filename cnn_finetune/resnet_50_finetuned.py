@@ -230,7 +230,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
             X_test[index - training_length] = Channeled_Data
             Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
 
-        return X_train, Y_train, X_test, Y_test
+    return X_train, Y_train, X_test, Y_test
 
 if __name__ == '__main__':
 
