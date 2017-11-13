@@ -198,6 +198,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
         var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
 
+        print np.amax(max_array)
         # convert to arrray
         #max_array = np.asarray(max_image)
         #sum_array = np.asarray(sum_image)
