@@ -257,8 +257,13 @@ if __name__ == '__main__':
     sum_folder = filepath+"sum/"
     var_folder = filepath+"var/"
 
-    X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
+    X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
 
+    print len(X_train)
+    print len(Y_train)
+    print len(X_valid)
+    print len(Y_valid)
+    
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
 
