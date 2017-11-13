@@ -158,7 +158,8 @@ class BlockStreamGenerator:
 
     def writeBlockAsImage(self, block, filepath, filename):
         im = Image.fromarray(block)
-        im.save("hi",format = "SPIDER")
+        im = im.convert('L')
+        im.save("hi",format = "PNG")
         print 'image '+ filename +' placed in '+ filepath
 
     def generate2DBlockStreamHandLabeled3Channel(self, resize=-1):
@@ -191,8 +192,8 @@ class BlockStreamGenerator:
 
                         # Save the non blown up images 
                         filepath_max = "generated_blocks/block_size_56/max/"
-                        filepath_max = "generated_blocks/block_size_56/sum/"
-                        filepath_max = "generated_blocks/block_size_56/var/"
+                        filepath_sum = "generated_blocks/block_size_56/sum/"
+                        filepath_var = "generated_blocks/block_size_56/var/"
                         filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
                         filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
                         filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
