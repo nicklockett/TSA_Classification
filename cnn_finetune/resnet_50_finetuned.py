@@ -203,6 +203,8 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         sum_array = np.asarray(sum_image)
         var_array = np.asarray(var_image)
 
+        print 'max array shape', max_array.shape
+
         # resize the image
         Channeled_Data = np.zeros((resize,resize,3))
         data_channel_1 = scipy.misc.imresize(arr = max_array, size=(resize, resize))
