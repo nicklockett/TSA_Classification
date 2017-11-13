@@ -177,13 +177,16 @@ if __name__ == '__main__':
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
     X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
 
+    print 'shape' ,X_train.shape
+    print Y_train.shape
+
     # Load training and eval data
-    dataCreator = TensorFlowDataSetCreator(sc)
+    """dataCreator = TensorFlowDataSetCreator(sc)
     dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = 32, augment = False, segmentNumber = -100)
     X_train = dataset.getTrainingData()
     Y_train = dataset.getTrainingLabels()
     X_valid = dataset.getTestingData()
-    Y_valid = dataset.getTestingLabels()
+    Y_valid = dataset.getTestingLabels()"""
 
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
