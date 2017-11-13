@@ -38,8 +38,10 @@ def create_max_projections():
 
 def main(argv):
     # create_max_projections()
-    pos_dir = "../data/positive_examples/14"
-    neg_dir = "../data/negative_examples/14"
+    # pos_dir = "C:\\Users\\han95\\Downloads\\Viola-Jones\\data\\trainset\\faces"
+    # neg_dir = "C:\\Users\\han95\\Downloads\\Viola-Jones\\data\\trainset\\non-faces"
+    pos_dir = "../data/positive_examples/threats"
+    neg_dir = "../data/negative_examples/non_threats"
     with open("ada_output.txt", "w") as f:
         pass
     ab = SCAdaBoost(
@@ -48,7 +50,7 @@ def main(argv):
         neg_dir,
         "../data/negative_examples/example.png"
     )
-    ab.load_examples(pos_dir, neg_dir, 65, 65)
+    ab.load_examples(pos_dir, neg_dir, 100, 100)
     ab.get_feature_vals_for_all()
     del ab.x
     ab.adaboost(10000, True)

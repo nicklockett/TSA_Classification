@@ -884,7 +884,17 @@ class SupervisedClassifier(object):
 
 
 class FeatureGenerator(SupervisedClassifier):
-    def generate_negative_features(self, directory, minsize=24, maxsize=125, num=25, thresh=0.125):
+    def generate_negative_features(
+            self,
+            directory,
+            minsize=24,
+            maxsize=50,
+            num=25,
+            var_thresh_min=0.0692,
+            var_thresh_max=4.129,
+            mean_thresh_min=-.238,
+            mean_thresh_max=3.425,
+            dest="../data/negative_examples/"):
         """
         Generates positive features (no threat). num is num randomly generated
         features per file.
@@ -920,18 +930,33 @@ class FeatureGenerator(SupervisedClassifier):
                 y = random.randint(ds, m - 1 - ds)
 
                 slic = flattened[x-ds:x+ds, y-ds:y+ds]
+                var = np.var(slic)
+                mean = np.mean(slic)
 
-                # make sure bad data doesn't end up in the samples.
-                if np.var(slic) < thresh:
+                # make sure generated data looks like the threats
+                if var < var_thresh_min:
+                    continue
+                if var > var_thresh_max:
+                    continue
+                if mean < mean_thresh_min:
+                    continue
+                if mean > mean_thresh_max:
                     continue
 
-                bs.write_slice_to_img(slic, "../data/negative_examples/{}_{}".format(
+                prob = stats.norm.pdf(mean, 1.3043641, .6739)
+                rnum = np.random.rand()
+
+                if rnum > prob:
+                    continue
+
+                outfile = os.path.join(dest, "{}_{}".format(
                     bs.person_id,
                     ct
                 ))
+                bs.write_slice_to_img(slic, outfile)
                 ct += 1
 
-    def squarize(self, x1, x2, y1, y2, xlim, ylim):
+    def squarize(self, x1, x2, y1, y2, xlim, ylim, make_bigger=True):
         """
         Squarizes the bounds
         """
@@ -945,8 +970,12 @@ class FeatureGenerator(SupervisedClassifier):
                 y1 -= 1
                 diff = xdist - abs(y2 - y1)
 
-            y2 += int(diff / 2)
-            y1 -= int(diff / 2)
+            if make_bigger:
+                y2 += int(diff / 2)
+                y1 -= int(diff / 2)
+            else:
+                x2 -= int(diff / 2)
+                x1 += int(diff / 2)
 
             if y2 > ylim:
                 d = y2 - ylim
@@ -964,8 +993,12 @@ class FeatureGenerator(SupervisedClassifier):
                 x1 -= 1
                 diff = ydist - abs(x2 - x1)
 
-            x2 += int(diff / 2)
-            x1 -= int(diff / 2)
+            if make_bigger:
+                x2 += int(diff / 2)
+                x1 -= int(diff / 2)
+            else:
+                y2 -= int(diff / 2)
+                y1 += int(diff / 2)
 
             if x2 > xlim:
                 d = x2 - xlim
@@ -1056,7 +1089,7 @@ class FeatureGenerator(SupervisedClassifier):
 
         return img
 
-    def compare_ys (self, box1, box2):
+    def compare_ys(self, box1, box2):
         """
         returns True if box1 is on the left
         returns False if box2 is on the left
@@ -1226,7 +1259,7 @@ class FeatureGenerator(SupervisedClassifier):
 
         return self.clean_up_regions(output)
 
-    def generate_positive_features(self, precise_labels_dir, dest="../data/positive_examples"):
+    def generate_positive_features(self, precise_labels_dir, dest="../data/positive_examples", make_bigger=True):
         """
         from precise labels, generates positive square features.
         """
@@ -1236,14 +1269,14 @@ class FeatureGenerator(SupervisedClassifier):
                 (x1, x2, y1, y2, z1, z2) = self.get_coords_from_file(f)
             else:
                 continue
-            (xy_x1, xy_x2, xy_y1, xy_y2) = self.squarize(x1, x2, y1, y2, 660, 512)
-            (xz_x1, xz_x2, xz_z1, xz_z2) = self.squarize(x1, x2, z1, z2, 660, 512)
-            (yz_y1, yz_y2, yz_z1, yz_z2) = self.squarize(y1, y2, z1, z2, 512, 512)
+            (xy_x1, xy_x2, xy_y1, xy_y2) = self.squarize(x1, x2, y1, y2, 660, 512, make_bigger=make_bigger)
+            (xz_x1, xz_x2, xz_z1, xz_z2) = self.squarize(x1, x2, z1, z2, 660, 512, make_bigger=make_bigger)
+            (yz_y1, yz_y2, yz_z1, yz_z2) = self.squarize(y1, y2, z1, z2, 512, 512, make_bigger=make_bigger)
 
             # now generate file!
             pid = re.search(r"(\w+)_\d+_threat", f).group(1)
             reg = re.search(r"(\d+)_threat", f).group(1)
-            fname = pid + reg
+            fname = pid + "_" + reg
             img = self.get_image_matrix(os.path.join("D:/590Data", pid) + "_projection.png")
             threat = img[xy_x1:xy_x2, xy_y1:xy_y2]
 
@@ -1706,10 +1739,14 @@ class SCAdaBoost(SupervisedClassifier):
                 Wnn += w
             else:
                 print("WOW THAT DIDN'T WORK")
+                print(examples[k])
 
-        j = 0
-        tau_hat = 0
-        M_hat = 0
+        Wnp = 0
+        Wnn = 0
+
+        j = -1
+        tau_hat = tau
+        M_hat = M
         n = len(examples)
 
         while True:
@@ -1723,7 +1760,7 @@ class SCAdaBoost(SupervisedClassifier):
                 E_hat = en
                 T_hat = -1
 
-            if E_hat < E or (E_hat == E and M_hat > M):
+            if E_hat < E or E == E_hat and M_hat > M:
                 E = E_hat
                 tau = tau_hat
                 M = M_hat
@@ -1742,16 +1779,18 @@ class SCAdaBoost(SupervisedClassifier):
                 else:
                     Wnp += w
                     Wpp -= w
-                if j == n - 1 or fv != examples[j + 1][0][f_i]:
+                if j == n - 1 or examples[j + 1][0][f_i] != fv:
                     break
                 else:
+                    fv2 = examples[j + 1][0][f_i]
                     j += 1
             if j == n - 1:
                 tau_hat = examples[n-1][0][f_i] + 1
                 M_hat = 0
             else:
-                tau_hat = (examples[j][0][f_i] + examples[j + 1][0][f_i]) / 2
-                M_hat = examples[j + 1][0][f_i] - examples[j][0][f_i]
+                fv2 = examples[j + 1][0][f_i]
+                tau_hat = (fv + fv2) / 2
+                M_hat = fv2 - fv
 
         return (tau, T, E, M)
 
@@ -1772,7 +1811,7 @@ class SCAdaBoost(SupervisedClassifier):
             E = stump[2]
             M = stump[3]
 
-            if E < best_error or ((abs(E - best_error) < 0.00001 and M > best_stump[3])):
+            if E < best_error or best_error == E and M > best_stump[3]:
                 best_error = E
                 best_stump = stump
                 best_feature_i = k
@@ -1817,11 +1856,13 @@ class SCAdaBoost(SupervisedClassifier):
                 if dec != x[1]:
                     E += x[2]
 
-            print(stump, E)
-            if E <= 0 and t == 0:
+            if E == 0:
+                E = 0.000000000000001
+            if E <= 0.000000000000001 and t == 0:
                 return stump, f_i
             else:
                 alph = (0.5) * math.log((1 - E) / E)
+                print(stump[2], E, f_i, alph)
                 alphas.append(alph)
                 stumps.append((stump, f_i))
                 if save_to_file:
