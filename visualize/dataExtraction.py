@@ -158,7 +158,7 @@ class BlockStreamGenerator:
 
     def writeBlockAsImage(self, block, filepath, filename):
         im = Image.fromarray(block)
-        im.save("hi")
+        im.save("hi","PNG")
         print 'image '+ filename +' placed in '+ filepath
 
     def generate2DBlockStreamHandLabeled3Channel(self, resize=-1):
