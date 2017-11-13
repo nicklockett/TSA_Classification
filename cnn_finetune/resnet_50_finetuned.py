@@ -185,6 +185,10 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
     X_test = np.empty((testing_lenth, resize, resize, 3))
     Y_test = np.empty((testing_lenth,2))
 
+    print 'here'
+    print len(max_image_filenames)
+    print max_image_filename = max_image_filenames[index]
+    
     for index in range(0,len(max_image_filenames)):
 
         max_image_filename = max_image_filenames[index]
