@@ -181,9 +181,9 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
     testing_lenth = len(max_image_filenames) - training_length
 
     X_train = np.empty((training_length, resize, resize, 3))
-    Y_train = np.empty(training_length)
+    Y_train = np.empty((training_length,2))
     X_test = np.empty((testing_lenth, resize, resize, 3))
-    Y_test = np.empty(testing_lenth)
+    Y_test = np.empty((testing_lenth,2))
 
     for index in range(0,len(max_image_filenames)):
 
@@ -220,10 +220,10 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
 
         if(index < training_length):
             X_train[index] = Channeled_Data
-            Y_train[index] = int(is_threat)
+            Y_train[index] = (1-int(is_threat),int(is_threat))
         else:
             X_test[index - training_length] = Channeled_Data
-            Y_test[index - training_length] = int(is_threat)
+            Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
 
         return X_train, Y_train, X_test, Y_test
 
@@ -238,25 +238,25 @@ if __name__ == '__main__':
     nb_epoch = 10
 
     # Load training and eval data
-    """sc = SupervisedClassifier('../../stage1_labels.csv')
+    sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
     print('RUNNING ON ALL SEGMENTS, WITH AUGMENTATION')
     #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, image_number = 2, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = img_rows, image_number = 2, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
     X_train = dataset.getTrainingData()
     list_of_values_train = dataset.getTrainingLabels()
     Y_train = to_categorical(list_of_values_train, num_classes=2)
     X_valid = dataset.getTestingData()
     list_of_values_test = dataset.getTestingLabels()
-    Y_valid = to_categorical(list_of_values_test, num_classes=2)"""
+    Y_valid = to_categorical(list_of_values_test, num_classes=2)
 
-    filepath = "generated_blocks/block_size_56/"
+    """filepath = "generated_blocks/block_size_56/"
 
     max_folder = filepath+"max/"
     sum_folder = filepath+"sum/"
     var_folder = filepath+"var/"
 
-    X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
+    X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)"""
 
     print len(X_train)
     print X_train.shape
