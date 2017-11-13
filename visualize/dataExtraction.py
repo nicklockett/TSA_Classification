@@ -187,6 +187,8 @@ class BlockStreamGenerator:
                         data_channel_2 = image_Sum[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
 
+                        print "HIIII"
+                        
                         # Save the non blown up images 
                         filepath_max = "generated_blocks/block_size_56/max/"
                         filepath_max = "generated_blocks/block_size_56/sum/"
