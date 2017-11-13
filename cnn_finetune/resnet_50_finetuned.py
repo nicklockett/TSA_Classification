@@ -14,6 +14,7 @@ from tf_dataset_creator import *
 from classes import *
 import cv2
 import os
+import scipy
 #from load_cifar10 import load_cifar10_data
 
 def identity_block(input_tensor, kernel_size, filters, stage, block):
@@ -194,14 +195,14 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
         
         # read in the image
-        max_image = cv2.imread(os.path.join(max_folder,max_image_filename))
-        sum_image = cv2.imread(os.path.join(sum_folder,sum_image_filename))
-        var_image = cv2.imread(os.path.join(var_folder,var_image_filename))
+        max_image = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
+        sum_image = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
+        var_image = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
 
         # convert to arrray
-        max_array = np.asarray(max_image)
-        sum_array = np.asarray(sum_image)
-        var_array = np.asarray(var_image)
+        #max_array = np.asarray(max_image)
+        #sum_array = np.asarray(sum_image)
+        #var_array = np.asarray(var_image)
 
         print 'max array shape', max_array.shape
 
