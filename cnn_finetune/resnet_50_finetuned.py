@@ -180,9 +180,9 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
     training_length = len(max_image_filenames)/2
     testing_lenth = len(max_image_filenames) - training_length
 
-    X_train = np.empty((training_length, resize, resize, channels))
+    X_train = np.empty((training_length, resize, resize, 3))
     Y_train = np.empty(training_length)
-    X_test = np.empty((testing_lenth, resize, resize, channels))
+    X_test = np.empty((testing_lenth, resize, resize, 3))
     Y_test = np.empty(testing_lenth)
 
     for index in range(0,len(max_image_filenames)):
