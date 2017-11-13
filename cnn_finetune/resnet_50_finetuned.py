@@ -191,6 +191,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
 
     for index in range(0,len(max_image_filenames)):
 
+        print index + '/' + len(max_image_filenames)
         max_image_filename = max_image_filenames[index]
         sum_image_filename = sum_image_filenames[index]
         var_image_filename = var_image_filenames[index]
@@ -201,14 +202,6 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
         sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
         var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
-
-        print 'MAX ARRAY: ', np.amax(max_array)
-        # convert to arrray
-        #max_array = np.asarray(max_image)
-        #sum_array = np.asarray(sum_image)
-        #var_array = np.asarray(var_image)
-
-        #print 'max array shape', max_array.shape
 
         # resize the image
         Channeled_Data = np.zeros((resize,resize,3))
