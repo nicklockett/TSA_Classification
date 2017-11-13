@@ -260,10 +260,12 @@ if __name__ == '__main__':
     X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
 
     print len(X_train)
+    print X_train.shape
     print len(Y_train)
+    print Y_train.shape
     print len(X_valid)
     print len(Y_valid)
-    
+
     # Load our model
     model = resnet50_model(img_rows, img_cols, channel, num_classes)
 
