@@ -191,7 +191,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
 
     for index in range(0,len(max_image_filenames)):
 
-        print index + '/' + len(max_image_filenames)
+        print str(index) + "/" + str(len(max_image_filenames))
         max_image_filename = max_image_filenames[index]
         sum_image_filename = sum_image_filenames[index]
         var_image_filename = var_image_filenames[index]
