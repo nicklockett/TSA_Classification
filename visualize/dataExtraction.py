@@ -157,10 +157,14 @@ class BlockStreamGenerator:
         return block_stream
 
     def writeBlockAsImage(self, block, filepath, filename):
-        im = Image.fromarray(block)
-        im = im.convert('L')
+        base_range = np.amax(block) - np.amin(block)
+        rescaled_range = 255 - 0
+        img_rescaled = (((block - np.amin(block)) * rescaled_range) / base_range)
+
+        im = Image.fromarray(np.uint8(img_rescaled))
+
         im.save(filepath + filename+ ".png",format = "PNG")
-        print 'image '+ filename +' placed in '+ filepath
+        print 'image '+ filename +'.png placed in '+ filepath
 
     def generate2DBlockStreamHandLabeled3Channel(self, resize=-1):
         block_stream = []
