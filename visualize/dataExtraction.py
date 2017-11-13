@@ -4,6 +4,7 @@ import math
 import matplotlib.pyplot as plot
 import mpl_toolkits.mplot3d.axes3d as axes3d
 import scipy.misc
+from PIL import Image
 
 class BlockStreamGenerator:
 
@@ -132,7 +133,7 @@ class BlockStreamGenerator:
 
         return results
 
-    def generate2DBlockStreamHandLabeled(self):
+    def generate2DBlockStreamHandLabeled(self, resize = -1):
         block_stream = []
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
         image_2D = self.bs.flatten_max()
@@ -147,11 +148,18 @@ class BlockStreamGenerator:
                     if(region_label!=1.0):
                         is_threat = self.classifyThreat2D(x, y, threat_cubes)
                         data = image_2D[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
+                        if resize != -1:
+                            data = scipy.misc.imresize(arr = data, size = (resize, resize))
                         block_stream.append((data, region_label, is_threat))
                         if(is_threat):
                             print(region_label)
 
         return block_stream
+
+    def writeBlockAsImage(block, filepath, filename):
+        im = Image.fromarray(block)
+        im.save(filepath + filename)
+        print 'image '+ filename +' placed in '+ filepath
 
     def generate2DBlockStreamHandLabeled3Channel(self, resize=-1):
         block_stream = []
@@ -178,6 +186,17 @@ class BlockStreamGenerator:
                         data_channel_1 = image_Max[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         data_channel_2 = image_Sum[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
+
+                        # Save the non blown up images 
+                        filepath_max = "generated_blocks/block_size_56/max/"
+                        filepath_max = "generated_blocks/block_size_56/sum/"
+                        filepath_max = "generated_blocks/block_size_56/var/"
+                        filename_max = individual_id+'_max_'+str(int(is_threat))+'_'+region_label+'_'+x+'_'+y+'_'+z
+                        filename_sum = individual_id+'_sum_'+str(int(is_threat))+'_'+region_label+'_'+x+'_'+y+'_'+z
+                        filename_var = individual_id+'_var_'+str(int(is_threat))+'_'+region_label+'_'+x+'_'+y+'_'+z
+                        self.writeBlockAsImage(data_channel_1, filepath_max, filename_max)
+                        self.writeBlockAsImage(data_channel_2, filepath_sum, filename_sum)
+                        self.writeBlockAsImage(data_channel_3, filepath_var, filename_var)
 
                         if(resize!=-1):
                             Channeled_Data = np.zeros((resize,resize,3))

@@ -173,7 +173,7 @@ if __name__ == '__main__':
     # Example to fine-tune on 3000 samples from Cifar10
 
     img_rows, img_cols = 224, 224 # Resolution of inputs
-    channel = 3
+    channel = 1
     num_classes = 2
     batch_size = 16 
     nb_epoch = 10
@@ -182,8 +182,8 @@ if __name__ == '__main__':
     sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
     print('RUNNING ON ALL SEGMENTS, WITH AUGMENTATION')
-    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 54, resize = 224, augment = False, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
-    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = 3, block_size = 50, resize = 224, image_number = 2, augment = True, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
+    dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 56, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
+    #dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(channels = channel, block_size = 50, resize = 224, image_number = 2, segmentNumber = -100, image_filepath = "../visualize/data/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/") 
     X_train = dataset.getTrainingData()
     list_of_values_train = dataset.getTrainingLabels()
     Y_train = to_categorical(list_of_values_train, num_classes=2)
