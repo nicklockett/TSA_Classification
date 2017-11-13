@@ -3,6 +3,9 @@
 *.aps
 *.csv
 *.mp4
+precise_labeling/cubes/*
+precise_labeling/zfiles/*
+precise_labeling/a3d/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
