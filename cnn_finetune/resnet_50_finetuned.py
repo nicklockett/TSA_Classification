@@ -212,15 +212,11 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
 
         # add all the channels to the channeled data
-        """for r in range(0,len(data_channel_1)):
+        for r in range(0,len(data_channel_1)):
             for c in range(0,len(data_channel_1[0])):
                 Channeled_Data[r][c][0] = data_channel_1[r][c]
                 Channeled_Data[r][c][1] = data_channel_2[r][c]
-                Channeled_Data[r][c][2] = data_channel_3[r][c]"""
-
-        Channeled_Data[:][:][0] = data_channel_1[:][:]
-        Channeled_Data[:][:][1] = data_channel_2[:][:]
-        Channeled_Data[:][:][2] = data_channel_3[:][:]
+                Channeled_Data[r][c][2] = data_channel_3[r][c]
 
         if(index < training_length):
             X_train[index] = Channeled_Data
