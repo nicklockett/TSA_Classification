@@ -258,10 +258,16 @@ if __name__ == '__main__':
 
     X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
 
+    print 'returned'
+
     np.save("X_train_56_blocksize_3_channel", X_train)
+    print 'wrote'
     np.save("Y_train_56_blocksize_3_channel", Y_train)
+    print 'wrote'
     np.save("X_valid_56_blocksize_3_channel", X_valid)
+    print 'wrote'
     np.save("Y_valid_56_blocksize_3_channel", Y_valid)
+    print 'wrote'
 
     print len(X_train)
     print X_train.shape
