@@ -189,7 +189,9 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
     print len(max_image_filenames)
     print max_image_filenames[10]
 
-    for index in range(0,len(max_image_filenames)):
+    #num_images = len(max_image_filenames)
+    num_images = 10
+    for index in range(0,num_images):
 
         print str(index) + "/" + str(len(max_image_filenames))
         max_image_filename = max_image_filenames[index]
@@ -210,11 +212,15 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
         data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
 
         # add all the channels to the channeled data
-        for r in range(0,len(data_channel_1)):
+        """for r in range(0,len(data_channel_1)):
             for c in range(0,len(data_channel_1[0])):
                 Channeled_Data[r][c][0] = data_channel_1[r][c]
                 Channeled_Data[r][c][1] = data_channel_2[r][c]
-                Channeled_Data[r][c][2] = data_channel_3[r][c]
+                Channeled_Data[r][c][2] = data_channel_3[r][c]"""
+
+        Channeled_Data[:][:][0] = data_channel_1[:][:]
+        Channeled_Data[:][:][1] = data_channel_2[:][:]
+        Channeled_Data[:][:][2] = data_channel_3[:][:]
 
         if(index < training_length):
             X_train[index] = Channeled_Data
@@ -255,6 +261,11 @@ if __name__ == '__main__':
     var_folder = filepath+"var/"
 
     X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
+
+    np.save("X_train_56_blocksize_3_channel", X_train)
+    np.save("Y_train_56_blocksize_3_channel", Y_train)
+    np.save("X_valid_56_blocksize_3_channel", X_valid)
+    np.save("Y_valid_56_blocksize_3_channel", Y_valid)
 
     print len(X_train)
     print X_train.shape
