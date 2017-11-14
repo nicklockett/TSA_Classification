@@ -255,16 +255,19 @@ if __name__ == '__main__':
     sum_folder = filepath+"sum/"
     var_folder = filepath+"var/"
 
-    X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
+    #X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
 
-    np.save("X_train_56_blocksize_3_channel", X_train)
-    print 'wrote'
-    np.save("Y_train_56_blocksize_3_channel", Y_train)
-    print 'wrote'
-    np.save("X_valid_56_blocksize_3_channel", X_valid)
-    print 'wrote'
-    np.save("Y_valid_56_blocksize_3_channel", Y_valid)
-    print 'wrote'
+    #np.save("X_train_56_blocksize_3_channel", X_train)
+    #np.save("Y_train_56_blocksize_3_channel", Y_train)
+    #np.save("X_valid_56_blocksize_3_channel", X_valid)
+    #np.save("Y_valid_56_blocksize_3_channel", Y_valid)
+
+    X_train = np.load("X_train_56_blocksize_3_channel")
+    Y_train = np.load("Y_train_56_blocksize_3_channel")
+    X_valid = np.load("X_valid_56_blocksize_3_channel")
+    Y_valid = np.load("Y_valid_56_blocksize_3_channel")
+
+    print 'read in all'
 
     print len(X_train)
     print X_train.shape
