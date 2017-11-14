@@ -189,8 +189,7 @@ def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
     print len(max_image_filenames)
     print max_image_filenames[10]
 
-    #num_images = len(max_image_filenames)
-    num_images = 10
+    num_images = len(max_image_filenames)
     for index in range(0,num_images):
 
         print str(index) + "/" + str(len(max_image_filenames))
@@ -257,8 +256,6 @@ if __name__ == '__main__':
     var_folder = filepath+"var/"
 
     X_train, Y_train, X_valid, Y_valid = load_images_from_folder(max_folder, sum_folder, var_folder, img_rows)
-
-    print 'returned'
 
     np.save("X_train_56_blocksize_3_channel", X_train)
     print 'wrote'
