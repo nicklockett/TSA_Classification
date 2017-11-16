@@ -178,7 +178,7 @@ class BlockStreamGenerator:
         threat_cubes = self.sc.get_threatcubes(individual_id)
         print threat_cubes
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
-        allowable_shift = self.blockSize/4
+        allowable_shift = self.blockSize/2
 
         print ("shift amount: ", self.shift)
 
@@ -186,6 +186,7 @@ class BlockStreamGenerator:
             for y in range(0, len(image_Max[x]), self.shift):
                     region_label = self.classifyRegion2D(x, y, segmented_data)
                     if(region_label!=1.0):
+                        
                         is_threat = self.classifyThreat2D(x, y, allowable_shift, threat_cubes)
 
                         Channeled_Data = np.zeros((self.blockSize,self.blockSize, 3))
@@ -245,7 +246,7 @@ class BlockStreamGenerator:
             return False
         
         in_x_region = (threat_region[1][0] < x + allowable_shift) & (x - allowable_shift <  threat_region[1][1])
-        in_y_region = (threat_region[0][0] < y + allowable_shift) & (y - allowable_shift< threat_region[0][1])
+        in_y_region = (threat_region[0][0] < y + allowable_shift) & (y - allowable_shift < threat_region[0][1])
 
         return in_x_region & in_y_region
 
