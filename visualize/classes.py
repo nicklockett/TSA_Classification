@@ -939,7 +939,7 @@ class SupervisedClassifier(object):
                 foundathreat = True
             threatcubes.append(threat)
 
-        if !foundathreat:
+        if foundathreat == False:
             print 'ERROR: found no threat'
         return threatcubes
 
