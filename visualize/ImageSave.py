@@ -51,6 +51,7 @@ class ImageSaver:
 	    var_image_filenames = os.listdir(var_folder)
 
 	    training_length = int(len(max_image_filenames)*(8/10))
+	    print training_length
 	    testing_lenth = len(max_image_filenames) - training_length
 
 	    X_train = np.empty((training_length, resize, resize, 3))
