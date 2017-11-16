@@ -88,7 +88,7 @@ class ImageSaver:
 	        data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
 
 	        # make channel 2 one that is filled with the region number
-	        data_channel_2 = np.full(size=(resize,resize),fill_value = int(region))
+	        data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
 
 	        # add all the channels to the channeled data
 	        for r in range(0,len(data_channel_1)):
