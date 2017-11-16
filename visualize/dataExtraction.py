@@ -186,7 +186,7 @@ class BlockStreamGenerator:
             for y in range(0, len(image_Max[x]), self.shift):
                     region_label = self.classifyRegion2D(x, y, segmented_data)
                     if(region_label!=1.0):
-                        is_threat = self.classifyThreat2D(x, y, threat_cubes)
+                        is_threat = self.classifyThreat2D(x, y, allowable_shift, threat_cubes)
 
                         Channeled_Data = np.zeros((self.blockSize,self.blockSize, 3))
 
