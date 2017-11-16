@@ -58,10 +58,10 @@ class ImageSaver:
 		testing_length = len(max_image_filenames) - training_length
 		print 'testing length', testing_length
 
-		X_train = np.empty((3, resize, resize, 3))
-		Y_train = np.empty((3,2))
-		X_test = np.empty((3, resize, resize, 3))
-		Y_test = np.empty((3,2))
+		X_train = np.empty((training_length, resize, resize, 3))
+		Y_train = np.empty((training_length,2))
+		X_test = np.empty((testing_length, resize, resize, 3))
+		Y_test = np.empty((testing_length,2))
 
 		print 'here'
 		print len(max_image_filenames)
