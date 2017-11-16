@@ -5,25 +5,21 @@ class ImageSaver:
         self.sc = SupervisedClassifier
 
 def save_images_to_folder(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/"):
-	"""This method returns the 2D training data, training labels, 
-    testing data, and testing labels for a particular data set"""
-    image_number = ""
+	image_number = ""
+	print ('beginning data accumulation')
+	data_label_stream = []
+	print ('looking for segment ', segmentNumber)
 
-    print ('beginning data accumulation')
+	image_path_list = self.get_image_set()
+	if(image_number != -1):
+		image_path_list = image_path_list[:image_number]
+	print (len(image_path_list))
 
-    data_label_stream = []
-    print ('looking for segment ', segmentNumber)
+	real_block_size = block_size
 
-    image_path_list = self.get_image_set()
-    if(image_number != -1):
-        image_path_list = image_path_list[:image_number]
-    print (len(image_path_list))
-
-    real_block_size = block_size
-
-    count = 0
-    for image_path in image_path_list:
-        count = count + 1
+	count = 0
+	for image_path in image_path_list:
+		count = count + 1
         print(count, ': about to create a body scan with filepath ', image_path)
         bs = BodyScan(image_filepath + image_path, nii_filepath)
         bsg = BlockStreamGenerator(bs, self.sc, blockSize = block_size)
