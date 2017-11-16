@@ -74,14 +74,17 @@ class ImageSaver:
 	        
 	        # read in the image
 	        max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
-	        sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
+	        #sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
 	        var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
 
 	        # resize the image
 	        Channeled_Data = np.zeros((resize,resize,3))
 	        data_channel_1 = scipy.misc.imresize(arr = max_array, size=(resize, resize))
-	        data_channel_2 = scipy.misc.imresize(arr = sum_array, size=(resize, resize))
+	        #data_channel_2 = scipy.misc.imresize(arr = sum_array, size=(resize, resize))
 	        data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
+
+	        # make channel 2 one that is filled with the region number
+	        data_channel_2 = np.full(size=(resize,resize),fill_value = int(region))
 
 	        # add all the channels to the channeled data
 	        for r in range(0,len(data_channel_1)):
