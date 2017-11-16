@@ -932,10 +932,15 @@ class SupervisedClassifier(object):
 
     def get_threatcubes(self, subject_id):
         threatcubes = []
-
+        foundathreat = False
         for segment in range (1,18):
-            threatcubes.append(self.get_precise_threat_from_segment(subject_id, segment))
+            threat = self.get_precise_threat_from_segment(subject_id, segment)
+            if threat!=-1:
+                foundathreat = True
+            threatcubes.append(threat)
 
+        if !foundathreat:
+            print 'ERROR: found no threat'
         return threatcubes
 
     def train(self):
