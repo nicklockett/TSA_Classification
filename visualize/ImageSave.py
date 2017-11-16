@@ -80,6 +80,7 @@ class ImageSaver:
 
 			# read in the image
 	        max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
+	        print max_array
 	        #sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
 	        var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
 
@@ -102,9 +103,11 @@ class ImageSaver:
 	        if(index < training_length):
 	        	X_train[index] = Channeled_Data
 	        	Y_train[index] = (1-int(is_threat),int(is_threat))
+	        	print 'added to training data!'
 	        else:
 	        	X_test[index - training_length] = Channeled_Data
 	        	Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
+	        	print 'added to test data'
 
 		return X_train, Y_train, X_test, Y_test
 
