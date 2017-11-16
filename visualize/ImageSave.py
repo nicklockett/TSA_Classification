@@ -53,7 +53,7 @@ class ImageSaver:
 		var_image_filenames = os.listdir(var_folder)
 
 		print len(max_image_filenames)
-		training_length = int(len(max_image_filenames)*(8/10))
+		training_length = int(len(max_image_filenames)*(8.0/10.0))
 		print training_length
 		testing_lenth = len(max_image_filenames) - training_length
 
