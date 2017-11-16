@@ -1,9 +1,7 @@
 # Save all images to a folder
-
 class ImageSaver:
-    def __init__(self, SupervisedClassifier):
-        self.sc = SupervisedClassifier
-
+	def __init__(self, SupervisedClassifier):
+		self.sc = SupervisedClassifier
 	def save_images_to_folder(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/"):
 		image_number = ""
 		print ('beginning data accumulation')
