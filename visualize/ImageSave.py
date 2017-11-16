@@ -46,6 +46,7 @@ class ImageSaver:
 
 	def load_images_from_folder(self, max_folder, sum_folder, var_folder, resize):
 
+		print max_folder
 	    max_image_filenames = os.listdir(max_folder)
 	    sum_image_filenames = os.listdir(sum_folder)
 	    var_image_filenames = os.listdir(var_folder)
