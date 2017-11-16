@@ -93,8 +93,11 @@ class ImageSaver:
 			#data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
 			#print 'resize, ', resize
 			data_channel_1 = max_array
+			print data_channel_1.shape
 			data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
+			print data_channel_2.shape
 			data_channel_3 = var_array
+			print data_channel_3.shape
 
 			# add all the channels to the channeled data
 			for r in range(0,len(data_channel_1)):
