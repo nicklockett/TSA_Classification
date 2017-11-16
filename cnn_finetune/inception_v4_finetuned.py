@@ -284,9 +284,14 @@ if __name__ == '__main__':
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
     # X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
     X_train = np.load("X_train_56_blocksize_3_channel_size299.npy")
+    print 'loaded'
     Y_train = np.load("Y_train_56_blocksize_3_channel_size299.npy")
-    X_valid = np.load("X_train_56_blocksize_3_channel_size299.npy")
-    Y_valid = np.load("X_train_56_blocksize_3_channel_size299.npy")
+    print 'loaded'
+    X_valid = np.load("X_valid_56_blocksize_3_channel_size299.npy")
+    print 'loaded'
+    Y_valid = np.load("Y_valid_56_blocksize_3_channel_size299.npy")
+    print 'loaded'
+
     
     """# Load training and eval data
     sc = SupervisedClassifier('../../stage1_labels.csv')
