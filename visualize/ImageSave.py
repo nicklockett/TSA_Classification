@@ -33,7 +33,7 @@ def save_images_to_folder(self, data = "2d", channels = 1, block_size = 40, resi
                 if(segmentNumber == block[1] or segmentNumber == -100):
                     data_label_stream.append((block[0], int(block[2])))
 
-def create_train_test_arrays_from_images(save_path = "", X_train, Y_train, X_valid, Y_valid):
+def create_train_test_arrays_from_images(save_path, X_train, Y_train, X_valid, Y_valid):
 	np.save(save_path + "X_train_56_blocksize_3_channel", X_train)
 	np.save(save_path + "Y_train_56_blocksize_3_channel", Y_train)
 	np.save(save_path + "X_valid_56_blocksize_3_channel", X_valid)
