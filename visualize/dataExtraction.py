@@ -196,9 +196,9 @@ class BlockStreamGenerator:
 
                         if saveImages:
                             # Save the non blown up images 
-                            filepath_max = "generated_blocks/block_size_"+blockSize+"/max/"
-                            filepath_sum = "generated_blocks/block_size_"+blockSize+"/sum/"
-                            filepath_var = "generated_blocks/block_size_"+blockSize+"/var/"
+                            filepath_max = "generated_blocks/block_size_"+self.blockSize+"/max/"
+                            filepath_sum = "generated_blocks/block_size_"+self.blockSize+"/sum/"
+                            filepath_var = "generated_blocks/block_size_"+self.blockSize+"/var/"
                             filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
                             filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
                             filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
