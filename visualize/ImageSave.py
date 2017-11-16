@@ -45,36 +45,34 @@ class ImageSaver:
 		np.save(save_path + "Y_valid_56_blocksize_3_channel_size299", Y_valid)
 
 	def load_images_from_folder(self, max_folder, sum_folder, var_folder, resize):
-
 		print max_folder
-	    max_image_filenames = os.listdir(max_folder)
-	    sum_image_filenames = os.listdir(sum_folder)
-	    var_image_filenames = os.listdir(var_folder)
+		max_image_filenames = os.listdir(max_folder)
+		sum_image_filenames = os.listdir(sum_folder)
+		var_image_filenames = os.listdir(var_folder)
 
-	    training_length = int(len(max_image_filenames)*(8/10))
-	    print training_length
-	    testing_lenth = len(max_image_filenames) - training_length
+		training_length = int(len(max_image_filenames)*(8/10))
+		print training_length
+		testing_lenth = len(max_image_filenames) - training_length
 
-	    X_train = np.empty((training_length, resize, resize, 3))
-	    Y_train = np.empty((training_length,2))
-	    X_test = np.empty((testing_lenth, resize, resize, 3))
-	    Y_test = np.empty((testing_lenth,2))
+		X_train = np.empty((training_length, resize, resize, 3))
+		Y_train = np.empty((training_length,2))
+		X_test = np.empty((testing_lenth, resize, resize, 3))
+		Y_test = np.empty((testing_lenth,2))
 
-	    print 'here'
-	    print len(max_image_filenames)
-	    print max_image_filenames[10]
+		print 'here'
+		print len(max_image_filenames)
+		print max_image_filenames[10]
 
-	    num_images = len(max_image_filenames)
-	    for index in range(0,num_images):
+		num_images = len(max_image_filenames)
+		for index in range(0,num_images):
+			print str(index) + "/" + str(len(max_image_filenames))
+			max_image_filename = max_image_filenames[index]
+			sum_image_filename = sum_image_filenames[index]
+			var_image_filename = var_image_filenames[index]
 
-	        print str(index) + "/" + str(len(max_image_filenames))
-	        max_image_filename = max_image_filenames[index]
-	        sum_image_filename = sum_image_filenames[index]
-	        var_image_filename = var_image_filenames[index]
+			file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
 
-	        file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
-	        
-	        # read in the image
+			# read in the image
 	        max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
 	        #sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
 	        var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
@@ -90,19 +88,19 @@ class ImageSaver:
 
 	        # add all the channels to the channeled data
 	        for r in range(0,len(data_channel_1)):
-	            for c in range(0,len(data_channel_1[0])):
-	                Channeled_Data[r][c][0] = data_channel_1[r][c]
-	                Channeled_Data[r][c][1] = data_channel_2[r][c]
-	                Channeled_Data[r][c][2] = data_channel_3[r][c]
+	        	for c in range(0,len(data_channel_1[0])):
+	        		Channeled_Data[r][c][0] = data_channel_1[r][c]
+	        		Channeled_Data[r][c][1] = data_channel_2[r][c]
+	        		Channeled_Data[r][c][2] = data_channel_3[r][c]
 
 	        if(index < training_length):
-	            X_train[index] = Channeled_Data
-	            Y_train[index] = (1-int(is_threat),int(is_threat))
+	        	X_train[index] = Channeled_Data
+	        	Y_train[index] = (1-int(is_threat),int(is_threat))
 	        else:
-	            X_test[index - training_length] = Channeled_Data
-	            Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
+	        	X_test[index - training_length] = Channeled_Data
+	        	Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
 
-	    return X_train, Y_train, X_test, Y_test
+		return X_train, Y_train, X_test, Y_test
 
 	def get_image_set(self):
 	        # Set image list for use - this is for my personal computer
