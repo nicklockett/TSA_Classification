@@ -49,8 +49,8 @@ class ImageSaver:
 	def load_images_from_folder(self, max_folder, sum_folder, var_folder, resize):
 		print max_folder
 		max_image_filenames = os.listdir("/home/rec/TSA_Classification/visualize/generated_blocks/block_size_58/max/")
-		sum_image_filenames = os.listdir(sum_folder)
-		var_image_filenames = os.listdir(var_folder)
+		sum_image_filenames = os.listdir("/home/rec/TSA_Classification/visualize/generated_blocks/block_size_58/sum/")
+		var_image_filenames = os.listdir("/home/rec/TSA_Classification/visualize/generated_blocks/block_size_58/var/")
 
 		print len(max_image_filenames)
 		training_length = int(len(max_image_filenames)*(8.0/10.0))
