@@ -3,6 +3,8 @@ from dataExtraction import *
 from random import shuffle
 import matplotlib.pyplot as plt
 import scipy.misc
+from os import listdir
+from os.path import isfile, join
 
 # Save all images to a folder
 class ImageSaver:
