@@ -28,6 +28,9 @@ class ImageSaver:
 
 		for image_path in image_path_list:
 			print image_path
+			count = count + 1
+			print(count, ': about to create a body scan with filepath ', image_path)
+
 		"""	count = count + 1
 	        print(count, ': about to create a body scan with filepath ', image_path)
 	        bs = BodyScan(image_filepath + image_path, nii_filepath)
