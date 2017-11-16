@@ -34,10 +34,10 @@ class ImageSaver:
 			bsg = BlockStreamGenerator(bs, self.sc, blockSize = block_size)
 			block_list = bsg.generate2DBlockStreamHandLabeled3Channel(saveImages=True, resize = resize)
 
-	def load_images_and_save_as_arrays(resize =299, max_folder , sum_folder, var_folder):
+	def load_images_and_save_as_arrays(resize, max_folder , sum_folder, var_folder):
 		X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder = max_folder, sum_folder = sum_folder, var_folder= var_folder)
 		create_train_test_arrays_from_images("", X_train, Y_train, X_valid, Y_valid)
-		
+
 	def create_train_test_arrays_from_images(save_path, X_train, Y_train, X_valid, Y_valid):
 		np.save(save_path + "X_train_56_blocksize_3_channel_size299", X_train)
 		np.save(save_path + "Y_train_56_blocksize_3_channel_size299", Y_train)
