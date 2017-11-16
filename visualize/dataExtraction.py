@@ -139,6 +139,7 @@ class BlockStreamGenerator:
         image_2D = self.bs.flatten_max()
         threat_cubes = self.sc.get_threatcubes(individual_id)
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
+        allowable_shift = self.blockSize/4
 
         print self.shift
 
@@ -146,7 +147,7 @@ class BlockStreamGenerator:
             for y in range(0, len(image_2D[x]), self.shift):
                     region_label = self.classifyRegion2D(x, y, segmented_data)
                     if(region_label!=1.0):
-                        is_threat = self.classifyThreat2D(x, y, threat_cubes)
+                        is_threat = self.classifyThreat2D(x, y, allowable_shift, threat_cubes)
                         data = image_2D[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         if resize != -1:
                             data = scipy.misc.imresize(arr = data, size = (resize, resize))
@@ -166,7 +167,7 @@ class BlockStreamGenerator:
         im.save(filepath + filename+ ".png",format = "PNG")
         print 'image '+ filename +'.png placed in '+ filepath
 
-    def generate2DBlockStreamHandLabeled3Channel(self, resize=-1):
+    def generate2DBlockStreamHandLabeled3Channel(self, saveImages = False, imagePath = "", resize=-1):
         block_stream = []
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
 
@@ -177,6 +178,7 @@ class BlockStreamGenerator:
         threat_cubes = self.sc.get_threatcubes(individual_id)
         print threat_cubes
         segmented_data = self.bs.generate_warped_2D_segmentation(individual_id)
+        allowable_shift = self.blockSize/4
 
         print ("shift amount: ", self.shift)
 
@@ -192,21 +194,20 @@ class BlockStreamGenerator:
                         data_channel_2 = image_Sum[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
                         data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
 
-                        print("HIIII")
-
-                        # Save the non blown up images 
-                        filepath_max = "generated_blocks/block_size_56/max/"
-                        filepath_sum = "generated_blocks/block_size_56/sum/"
-                        filepath_var = "generated_blocks/block_size_56/var/"
-                        filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                        filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                        filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                        print filename_max
-                        print filename_sum
-                        print filename_var
-                        self.writeBlockAsImage(data_channel_1, filepath_max, filename_max)
-                        self.writeBlockAsImage(data_channel_2, filepath_sum, filename_sum)
-                        self.writeBlockAsImage(data_channel_3, filepath_var, filename_var)
+                        if saveImages:
+                            # Save the non blown up images 
+                            filepath_max = "generated_blocks/block_size_"+block_size_+"/max/"
+                            filepath_sum = "generated_blocks/block_size_"+block_size_+"/sum/"
+                            filepath_var = "generated_blocks/block_size_"+block_size_+"/var/"
+                            filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                            filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                            filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                            print filename_max
+                            print filename_sum
+                            print filename_var
+                            self.writeBlockAsImage(data_channel_1, filepath_max, filename_max)
+                            self.writeBlockAsImage(data_channel_2, filepath_sum, filename_sum)
+                            self.writeBlockAsImage(data_channel_3, filepath_var, filename_var)
 
                         if(resize!=-1):
                             Channeled_Data = np.zeros((resize,resize,3))
@@ -231,20 +232,20 @@ class BlockStreamGenerator:
     def classifyRegion2D(self, x, y, segmented_data):
         return segmented_data[660-1-x][y]
 
-    def classifyThreat2D(self, x, y, threat_regions):
+    def classifyThreat2D(self, x, y, allowable_shift, threat_regions):
         for region in threat_regions:
-            if(self.blockInThreatZone2D(x, y, region)):
+            if(self.blockInThreatZone2D(x, y, allowable_shift, region)):
                 return True
 
         return False 
 
-    def blockInThreatZone2D(self, x, y, threat_region):
+    def blockInThreatZone2D(self, x, y, allowable_shift, threat_region):
         # If this isn't a segment with a threat anyways, return False
         if(threat_region==-1):
             return False
-
-        in_x_region = (threat_region[0][0] < y) & (y < threat_region[0][1])
-        in_y_region = (threat_region[1][0] < x) & (x <  threat_region[1][1])
+        
+        in_x_region = (threat_region[1][0] < x + allowable_shift) & (x - allowable_shift <  threat_region[1][1])
+        in_y_region = (threat_region[0][0] < y + allowable_shift) & (y - allowable_shift< threat_region[0][1])
 
         return in_x_region & in_y_region
 
