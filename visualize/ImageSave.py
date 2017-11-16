@@ -79,45 +79,38 @@ class ImageSaver:
 			var_image_filename = var_image_filenames[index]
 
 			file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
-
 			# read in the image
-	        max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
-	        print max_array
-	        #sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
-	        var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
+			max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
+			#print max_array
+			#sum_array = scipy.misc.imread(os.path.join(sum_folder,sum_image_filename), mode = 'L')
+			var_array = scipy.misc.imread(os.path.join(var_folder,var_image_filename), mode = 'L')
+			# resize the image
+			Channeled_Data = np.zeros((resize,resize,3))
+			#data_channel_1 = scipy.misc.imresize(arr = max_array, size=(resize, resize))
+			#data_channel_2 = scipy.misc.imresize(arr = sum_array, size=(resize, resize))
+			#data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
+			# make channel 2 one that is filled with the region number
+			#data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
+			#print 'resize, ', resize
+			data_channel_1 = max_array
+			data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
+			data_channel_3 = var_array
 
-	        # resize the image
-	        Channeled_Data = np.zeros((resize,resize,3))
-	        #data_channel_1 = scipy.misc.imresize(arr = max_array, size=(resize, resize))
-	        #data_channel_2 = scipy.misc.imresize(arr = sum_array, size=(resize, resize))
-	        #data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
+			# add all the channels to the channeled data
+			for r in range(0,len(data_channel_1)):
+				for c in range(0,len(data_channel_1[0])):
+					Channeled_Data[r][c][0] = data_channel_1[r][c]
+					Channeled_Data[r][c][1] = data_channel_2[r][c]
+					Channeled_Data[r][c][2] = data_channel_3[r][c]
 
-	        # make channel 2 one that is filled with the region number
-	        #data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
-
-	        print 'resize, ', resize
-	        data_channel_1 = max_array
-	        data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
-	        data_channel_3 = var_array
-
-	        print index
-	        print training_length
-	        print index < training_length
-	        # add all the channels to the channeled data
-	        for r in range(0,len(data_channel_1)):
-	        	for c in range(0,len(data_channel_1[0])):
-	        		Channeled_Data[r][c][0] = data_channel_1[r][c]
-	        		Channeled_Data[r][c][1] = data_channel_2[r][c]
-	        		Channeled_Data[r][c][2] = data_channel_3[r][c]
-
-	        if(index < training_length):
-	        	X_train[index] = Channeled_Data
-	        	Y_train[index] = (1-int(is_threat),int(is_threat))
-	        	print 'added to training data!'
-	        else:
-	        	X_test[index - training_length] = Channeled_Data
-	        	Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
-	        	print 'added to test data'
+			if(index < training_length):
+				X_train[index] = Channeled_Data
+				Y_train[index] = (1-int(is_threat),int(is_threat))
+				print 'added to training data!'
+			else:
+				X_test[index - training_length] = Channeled_Data
+				Y_test[index - training_length] = (1-int(is_threat),int(is_threat))
+				print 'added to test data'
 
 		return X_train, Y_train, X_test, Y_test
 
