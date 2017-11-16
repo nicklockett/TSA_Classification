@@ -74,10 +74,14 @@ class ImageSaver:
 		num_images = len(max_image_filenames)
 		for index in range(0,num_images):
 			print str(index) + "/" + str(len(max_image_filenames))
+
 			max_image_filename = max_image_filenames[index]
 			sum_image_filename = sum_image_filenames[index]
 			var_image_filename = var_image_filenames[index]
 
+			print max_image_filename
+			print var_image_filename
+			
 			file_id, channel_type, is_threat, region, x, y = max_image_filename.split("_")
 			# read in the image
 			max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
