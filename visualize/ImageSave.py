@@ -1,3 +1,9 @@
+from classes import *
+from dataExtraction import *
+from random import shuffle
+import matplotlib.pyplot as plt
+import scipy.misc
+
 # Save all images to a folder
 class ImageSaver:
 	def __init__(self, SupervisedClassifier):
