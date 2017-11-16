@@ -282,9 +282,13 @@ if __name__ == '__main__':
     nb_epoch = 10
 
     # Load Cifar10 data. Please implement your own load_data() module for your own dataset
-    X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
-
-    # Load training and eval data
+    # X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
+    X_train = np.load("X_train_56_blocksize_3_channel_size299.npy")
+    Y_train = np.load("Y_train_56_blocksize_3_channel_size299.npy")
+    X_valid = np.load("X_train_56_blocksize_3_channel_size299.npy")
+    Y_valid = np.load("X_train_56_blocksize_3_channel_size299.npy")
+    
+    """# Load training and eval data
     sc = SupervisedClassifier('../../stage1_labels.csv')
     dataCreator = TensorFlowDataSetCreator(sc)
     print('RUNNING ON ALL SEGMENTS, WITH AUGMENTATION')
@@ -295,7 +299,7 @@ if __name__ == '__main__':
     Y_train = to_categorical(list_of_values_train, num_classes=2)
     X_valid = dataset.getTestingData()
     list_of_values_test = dataset.getTestingLabels()
-    Y_valid = to_categorical(list_of_values_test, num_classes=2)
+    Y_valid = to_categorical(list_of_values_test, num_classes=2)"""
 
     # Load our model
     model = inception_v4_model(img_rows, img_cols, channel, num_classes, dropout_keep_prob=0.2)
