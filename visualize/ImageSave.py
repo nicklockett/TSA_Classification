@@ -38,13 +38,15 @@ class ImageSaver:
 
 	def load_images_and_save_as_arrays(self, resize, max_folder , sum_folder, var_folder):
 		X_train, Y_train, X_test, Y_test = self.load_images_from_folder(max_folder = max_folder, sum_folder = sum_folder, var_folder= var_folder, resize = resize)
-		self.create_train_test_arrays_from_images("", X_train, Y_train, X_test, Y_test)
+		self.create_train_test_arrays_from_images("", X_train, Y_train, X_test, Y_test, resize)
 
-	def create_train_test_arrays_from_images(self, save_path, X_train, Y_train, X_valid, Y_valid):
-		np.save(save_path + "X_train_56_blocksize_3_channel_size299", X_train)
-		np.save(save_path + "Y_train_56_blocksize_3_channel_size299", Y_train)
-		np.save(save_path + "X_valid_56_blocksize_3_channel_size299", X_valid)
-		np.save(save_path + "Y_valid_56_blocksize_3_channel_size299", Y_valid)
+	def create_train_test_arrays_from_images(self, save_path, X_train, Y_train, X_valid, Y_valid, resize):
+		np.save(save_path + "X_train_56_blocksize_3_channel_size"+str(resize), X_train)
+		np.save(save_path + "Y_train_56_blocksize_3_channel_size"+str(resize), Y_train)
+		np.save(save_path + "X_valid_56_blocksize_3_channel_size"+str(resize), X_valid)
+		np.save(save_path + "Y_valid_56_blocksize_3_channel_size"+str(resize), Y_valid)
+
+		print 'all are saved!!'
 
 	def load_images_from_folder(self, max_folder, sum_folder, var_folder, resize):
 		print max_folder
