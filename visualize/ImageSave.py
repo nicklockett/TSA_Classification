@@ -34,17 +34,17 @@ class ImageSaver:
 			bsg = BlockStreamGenerator(bs, self.sc, blockSize = block_size)
 			block_list = bsg.generate2DBlockStreamHandLabeled3Channel(saveImages=True, resize = resize)
 
-	def load_images_and_save_as_arrays(resize, max_folder , sum_folder, var_folder):
+	def load_images_and_save_as_arrays(self, resize, max_folder , sum_folder, var_folder):
 		X_train, Y_train, X_test, Y_test = load_images_from_folder(max_folder = max_folder, sum_folder = sum_folder, var_folder= var_folder)
 		create_train_test_arrays_from_images("", X_train, Y_train, X_valid, Y_valid)
 
-	def create_train_test_arrays_from_images(save_path, X_train, Y_train, X_valid, Y_valid):
+	def create_train_test_arrays_from_images(self, save_path, X_train, Y_train, X_valid, Y_valid):
 		np.save(save_path + "X_train_56_blocksize_3_channel_size299", X_train)
 		np.save(save_path + "Y_train_56_blocksize_3_channel_size299", Y_train)
 		np.save(save_path + "X_valid_56_blocksize_3_channel_size299", X_valid)
 		np.save(save_path + "Y_valid_56_blocksize_3_channel_size299", Y_valid)
 
-	def load_images_from_folder(max_folder, sum_folder, var_folder, resize):
+	def load_images_from_folder(self, max_folder, sum_folder, var_folder, resize):
 
 	    max_image_filenames = os.listdir(max_folder)
 	    sum_image_filenames = os.listdir(sum_folder)
