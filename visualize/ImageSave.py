@@ -14,8 +14,8 @@ class ImageSaver:
 		data_label_stream = []
 		print ('looking for segment ', segmentNumber)
 
-		print image_number
-		
+		print('image_number ',image_number)
+
 		image_path_list = self.get_image_set()
 		if(image_number != -1):
 			image_path_list = image_path_list[:image_number]
