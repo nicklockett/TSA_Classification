@@ -198,19 +198,19 @@ class BlockStreamGenerator:
 
                         if saveImages:
                             if data_channel_1.shape[0] == self.blockSize and data_channel_1.shape[1] == self.blockSize:
-                            # Save the non blown up images 
-                            filepath_max = "generated_blocks/block_size_"+str(self.blockSize)+"/max/"
-                            filepath_sum = "generated_blocks/block_size_"+str(self.blockSize)+"/sum/"
-                            filepath_var = "generated_blocks/block_size_"+str(self.blockSize)+"/var/"
-                            filename_max = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                            filename_sum = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                            filename_var = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                            print filename_max
-                            print filename_sum
-                            print filename_var
-                            self.writeBlockAsImage(data_channel_1, filepath_max, filename_max)
-                            self.writeBlockAsImage(data_channel_2, filepath_sum, filename_sum)
-                            self.writeBlockAsImage(data_channel_3, filepath_var, filename_var)
+                                # Save the non blown up images 
+                                filepath_max = "generated_blocks/block_size_"+str(self.blockSize)+"/max/"
+                                filepath_sum = "generated_blocks/block_size_"+str(self.blockSize)+"/sum/"
+                                filepath_var = "generated_blocks/block_size_"+str(self.blockSize)+"/var/"
+                                filename_max = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                                filename_sum = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                                filename_var = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                                print filename_max
+                                print filename_sum
+                                print filename_var
+                                self.writeBlockAsImage(data_channel_1, filepath_max, filename_max)
+                                self.writeBlockAsImage(data_channel_2, filepath_sum, filename_sum)
+                                self.writeBlockAsImage(data_channel_3, filepath_var, filename_var)
 
                         if(resize!=-1):
                             Channeled_Data = np.zeros((resize,resize,3))
