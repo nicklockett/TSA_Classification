@@ -4,8 +4,9 @@ from random import shuffle
 from sklearn import svm
 from ImageSave import *
 
-
-imagesSaved = ImageSaver.save_images_to_folder(channels = 3, block_size = 58, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
+sc = SupervisedClassifier('../../stage1_labels.csv')
+im = ImageSaver(sc)
+imagesSaved = im.save_images_to_folder(channels = 3, block_size = 58, resize = -1, segmentNumber = -100, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "../visualize/data/Batch_2D_warp_labels/")
 
 # need to ingest and iterate through multiple bodies
 #fileId = "5e429137784baf5646211dcc8c16ca51"
