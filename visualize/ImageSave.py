@@ -20,7 +20,10 @@ class ImageSaver:
 
 		real_block_size = block_size
 
+		print image_path_list
+
 		count = 0
+		print count
 		for image_path in image_path_list:
 			count = count + 1
 	        print(count, ': about to create a body scan with filepath ', image_path)
