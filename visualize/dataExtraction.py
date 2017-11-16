@@ -168,6 +168,7 @@ class BlockStreamGenerator:
         print 'image '+ filename +'.png placed in '+ filepath
 
     def generate2DBlockStreamHandLabeled3Channel(self, saveImages = False, imagePath = "", resize=-1):
+        print 'here'
         block_stream = []
         individual_id = self.bs.filepath.split('/')[-1:][0].split('.')[0]
 
