@@ -197,13 +197,14 @@ class BlockStreamGenerator:
                         data_channel_3 = image_Var[x-self.shift:x+self.shift, y-self.shift:y+self.shift]
 
                         if saveImages:
+                            if data_channel_1.shape[0] == self.blockSize && data_channel_1.shape[1] == self.blockSize
                             # Save the non blown up images 
                             filepath_max = "generated_blocks/block_size_"+str(self.blockSize)+"/max/"
                             filepath_sum = "generated_blocks/block_size_"+str(self.blockSize)+"/sum/"
                             filepath_var = "generated_blocks/block_size_"+str(self.blockSize)+"/var/"
-                            filename_max = individual_id+"_max_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                            filename_sum = individual_id+"_sum_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
-                            filename_var = individual_id+"_var_"+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                            filename_max = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                            filename_sum = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
+                            filename_var = individual_id+str(int(is_threat))+"_"+str(region_label)[2:]+"_"+str(x)+"_"+str(y)
                             print filename_max
                             print filename_sum
                             print filename_var
