@@ -14,7 +14,7 @@ class ImageSaver:
 		print ('beginning data accumulation')
 		data_label_stream = []
 		print ('looking for segment ', segmentNumber)
-		
+
 		image_path_list = self.get_image_set()
 		print (len(image_path_list))
 
@@ -26,7 +26,7 @@ class ImageSaver:
 	        print(count, ': about to create a body scan with filepath ', image_path)
 	        bs = BodyScan(image_filepath + image_path, nii_filepath)
 	        bsg = BlockStreamGenerator(bs, self.sc, blockSize = block_size)
-	        block_list = bsg.generate2DBlockStreamHandLabeled3Channel(saveImages=saveImages, resize = resize)
+	        block_list = bsg.generate2DBlockStreamHandLabeled3Channel(saveImages=True, resize = resize)
 	        
 	        if(resize!=-1):
 	            real_block_size = resize
