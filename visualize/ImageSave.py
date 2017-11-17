@@ -60,7 +60,7 @@ class ImageSaver:
 		testing_length = len(max_image_filenames) - training_length
 		
 		print 'trianing length', training_length
-		print 'testing length', testing_length
+		print 'testing length', testing_lengths
 
 		X_train = np.empty((training_length, resize, resize, 3))
 		Y_train = np.empty((training_length,2))
@@ -76,7 +76,7 @@ class ImageSaver:
 			print str(index) + "/" + str(len(max_image_filenames))
 
 			max_image_filename = max_image_filenames[index]
-			sum_image_filename = sum_image_filenames[index]
+			#sum_image_filename = sum_image_filenames[index]
 			var_image_filename = var_image_filenames[index]
 
 			print max_image_filename
@@ -92,8 +92,10 @@ class ImageSaver:
 			# resize the image
 			Channeled_Data = np.zeros((resize,resize,3))
 			data_channel_1 = scipy.misc.imresize(arr = max_array, size=(resize, resize))
+			data_channel_2 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
+			data_channel_3 = data_channel_1
 			#data_channel_2 = scipy.misc.imresize(arr = sum_array, size=(resize, resize))
-			data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
+			#data_channel_3 = scipy.misc.imresize(arr = var_array, size=(resize, resize))
 			# make channel 2 one that is filled with the region number
 			#data_channel_2 = np.full(shape=(resize,resize),fill_value = int(region))
 			#print 'resize, ', resize
