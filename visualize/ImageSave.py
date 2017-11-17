@@ -83,7 +83,7 @@ class ImageSaver:
 			print var_image_filename
 
 			file_id, region, x, y = max_image_filename.split("_")
-			is_threat = int(file_id[len(file_id)-2):])
+			is_threat = int(file_id[(len(file_id)-2):])
 			print 'is threat' , is_threat
 			# read in the image
 			max_array = scipy.misc.imread(os.path.join(max_folder,max_image_filename), mode = 'L')
