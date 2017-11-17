@@ -124,7 +124,7 @@ class ImageSaver:
 
 	def get_image_set(self):
 	        # Set image list for use - this is for my personal computer
-	        image_path_list = [	"7937949be388818d91766d2566f0e8cf.a3d",
+	        """image_path_list = [	"7937949be388818d91766d2566f0e8cf.a3d",
 	"63781f8e65112e3f7bdc54394abc2310.a3d",
 	"0958be20b77ecd4b4e19d749a271b7bb.a3d",
 	"751eeccb4219a04b7f3c6be293003054.a3d",
@@ -132,7 +132,7 @@ class ImageSaver:
 	"e69ebd61a31b52c1ff560477534cf80b.a3d",
 	"3f276a1a6cb52c371bad9a651e8e9bbf.a3d",
 	"6d28ec3d68a372419e582cfb6f78c97f.a3d"]
-	        return image_path_list
+	        return image_path_list"""
 
 	        # full image list for server
 	        image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
