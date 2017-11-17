@@ -262,10 +262,10 @@ if __name__ == '__main__':
     #np.save("X_valid_56_blocksize_3_channel", X_valid)
     #np.save("Y_valid_56_blocksize_3_channel", Y_valid)
 
-    X_train = np.load("X_train_56_blocksize_3_channel.npy")
-    Y_train = np.load("Y_train_56_blocksize_3_channel.npy")
-    X_valid = np.load("X_valid_56_blocksize_3_channel.npy")
-    Y_valid = np.load("Y_valid_56_blocksize_3_channel.npy")
+    X_train = np.load("X_train_56_blocksize_3_channel_size224.npy")
+    Y_train = np.load("Y_train_56_blocksize_3_channel_size224.npy")
+    X_valid = np.load("X_valid_56_blocksize_3_channel_size224.npy")
+    Y_valid = np.load("Y_valid_56_blocksize_3_channel_size224.npy")
 
     print 'read in all'
 
