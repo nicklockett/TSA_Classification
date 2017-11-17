@@ -4,6 +4,74 @@ from random import shuffle
 import matplotlib.pyplot as plt
 import scipy.misc
 
+class TensorFlowDataSetCreatorLowMemory:
+    def __init__(self, SupervisedClassifier):
+        self.sc = SupervisedClassifier
+        self.datacreator = TensorFlowDataSetCreator(self.sc)
+
+    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, augment = False, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/", mode = "percent"):
+        """This method returns the 2D training data, training labels, 
+        testing data, and testing labels for a particular data set"""
+
+        print 'HERE'
+        # Create arrays with proper sizes
+        trainingData = np.empty((0, block_size, block_size, channels))
+        trainingLabels = np.empty(0)
+        testingData = np.empty((0, block_size, block_size, channels))
+        testingLabels = np.empty(0)
+
+        image_path_list = self.datacreator.get_image_set()
+        image_num = len(image_path_list)
+        if(image_number != -1):
+            image_path_list = image_path_list[:image_number]
+        print (len(image_path_list))
+
+        image_count = 0
+        training_count = 0
+        testing_count = 0
+
+        for image_path in image_path_list:
+            image_count = image_count + 1
+            print(image_count, ': about to create a body scan with filepath ', image_path)
+            
+            real_block_size = resize
+            """bs = BodyScan(image_filepath + image_path, nii_filepath)
+            bsg = BlockStreamGenerator(bs, self.sc, blockSize = block_size)
+            block_list = []
+
+            if(data == "2d"):
+                if(channels == 1):
+                    block_list = bsg.generate2DBlockStreamHandLabeled()
+                if(channels == 3):
+                    block_list = bsg.generate2DBlockStreamHandLabeled3Channel(resize)"""
+            
+            block_list = np.zeros((10,real_block_size, real_block_size, 3))
+
+            if(resize!=-1):
+                real_block_size = resize
+
+            print 'HERE2'
+            for block in block_list:
+                print "block list"
+                print real_block_size
+                #if block[0].shape[0] == (real_block_size) and block[0].shape[1] == (real_block_size):
+                    #if(segmentNumber == block[1] or segmentNumber == -100):
+                print (image_count < image_num/2)
+                if(image_count < image_num/2):
+                    print "appending"
+                    trainingData.append(block[0])
+                    trainingLabels.append(0.0)
+                    training_count += 1
+                else:
+                    print "appending2"
+                    testingData.append(block[0])
+                    testingLabels.append(0.0)
+                    #testingData[testing_count] = block[0]
+                    #testingLabels[testing_count] = int(block[2])
+                    testing_count +=1
+
+        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
+
 class TensorFlowDataSetCreator:
 
     def __init__(self, SupervisedClassifier):
@@ -12,7 +80,7 @@ class TensorFlowDataSetCreator:
     #def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, segmentNumber=-1):
      #   return CreateTrainAndTestDataAndLabels(data, channels, block_size, segmentNumber)
 
-    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, augment = False, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/", mode = "percent"):
+    def CreateTensorFlowDataSetFromBlockStream(self, data = "2d", channels = 1, block_size = 40, resize = -1, segmentNumber=-100, augment = False, image_number = -1, image_filepath = "../../../rec/data/PSRC/Data/stage1/a3d/", nii_filepath = "data/Batch_2D_warp_labels/", mode = "percent", saveImages = False, saveArrays = False):
         """This method returns the 2D training data, training labels, 
         testing data, and testing labels for a particular data set"""
 
@@ -40,7 +108,7 @@ class TensorFlowDataSetCreator:
                 if(channels == 1):
                     block_list = bsg.generate2DBlockStreamHandLabeled()
                 if(channels == 3):
-                    block_list = bsg.generate2DBlockStreamHandLabeled3Channel(resize)
+                    block_list = bsg.generate2DBlockStreamHandLabeled3Channel(saveImages=saveImages, resize = resize)
             
             if(resize!=-1):
                 real_block_size = resize
@@ -58,11 +126,11 @@ class TensorFlowDataSetCreator:
         # Note: shuffle after?
         shuffle(data_label_stream)
 
-        (trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream_2(data_label_stream, block_size = real_block_size, channels = channels)
-        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
+        #(trainingData, trainingLabels, testingData, testingLabels) = self.divide_data_stream_2(data_label_stream, block_size = real_block_size, channels = channels)
+        #return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
 
 
-        """trainingData = []
+        trainingData = []
         trainingLabels = []
         testingData = []
         testingLabels = []
@@ -78,11 +146,17 @@ class TensorFlowDataSetCreator:
         testingData = np.array(testingData)
         testingLabels = np.array(testingLabels)
 
+        if(saveArrays):
+            np.save(save_path + "X_train_"+block_size+"_blocksize_3_channel", X_train)
+            np.save(save_path + "Y_train_"+block_size+"_blocksize_3_channel", Y_train)
+            np.save(save_path + "X_valid_"+block_size+"_blocksize_3_channel", X_valid)
+            np.save(save_path + "Y_valid_"+block_size+"_blocksize_3_channel", Y_valid)
+
         print(type(trainingData))
         print(type(trainingData[0]))
         print(trainingData.shape)
 
-        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)"""
+        return DataSetTSA(trainingData, trainingLabels, testingData, testingLabels)
 
     def divide_data_stream_2(self, data_label_stream, block_size, channels, percent = .5):
         data_stream = []
@@ -207,9 +281,11 @@ class TensorFlowDataSetCreator:
         return (trainingData, trainingLabels, testingData, testingLabels)
 
     def get_image_set(self):
-        # Set image list for use
-        """image_path_list = ["0a27d19c6ec397661b09f7d5998e0b14.a3d"]
-        return image_path_list"""
+        # Set image list for use - this is for my personal computer
+        #image_path_list = ["5e429137784baf5646211dcc8c16ca51.a3d"]
+        #return image_path_list
+
+        # full image list for server
         image_path_list = ["6574d7241cad5f378da7dce9dfec4cd0.a3d",
 "8c70cc871902ae955d740cf1b7afc3e8.a3d",
 "87ab2075c257d92ec4bcb675b11d460f.a3d",
@@ -653,7 +729,7 @@ class TensorFlowDataSetCreator:
 "e69ebd61a31b52c1ff560477534cf80b.a3d",
 "3f276a1a6cb52c371bad9a651e8e9bbf.a3d",
 "6d28ec3d68a372419e582cfb6f78c97f.a3d"]
-        return image_path_list
+        return image_path_list 
 
 class DataSetTSA:
     def __init__(self, trD, trL, teD, teL):
