@@ -38,6 +38,7 @@ def main(unused_argv):
 	print(type(train_data[0][0][0])) # get
 	print(type(train_data[0][0][0][0])) # get
 
+	print('here also')
 	#train_data = dataset.getTrainingData()
 	#train_labels = dataset.getTrainingLabels()
 	#eval_data = dataset.getTestingData()
