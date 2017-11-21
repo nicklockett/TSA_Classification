@@ -27,9 +27,13 @@ def main(unused_argv):
 	#dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True, segmentNumber = segmentNumber)
 	
 	train_data = np.load("../cnn_finetune/X_train_56_blocksize_3_channel_size224.npy")
+	print 'loaded'
 	train_labels = np.load("../cnn_finetune/Y_train_56_blocksize_3_channel_size224.npy")
+	print 'loaded'
 	eval_data = np.load("../cnn_finetune/X_valid_56_blocksize_3_channel_size224.npy")
+	print 'loaded'
 	eval_labels = np.load("../cnn_finetune/Y_valid_56_blocksize_3_channel_size224.npy")
+	print 'loaded'
 
 	#train_data = dataset.getTrainingData()
 	#train_labels = dataset.getTrainingLabels()
