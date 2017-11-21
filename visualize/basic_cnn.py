@@ -35,6 +35,7 @@ def main(unused_argv):
 
 	print(type(train_data[0]))
 	print(type(train_data[0][0]))
+	print(type(train_data[0][0][0]))
 
 	#train_data = dataset.getTrainingData()
 	#train_labels = dataset.getTrainingLabels()
