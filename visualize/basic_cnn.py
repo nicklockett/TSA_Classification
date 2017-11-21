@@ -23,12 +23,18 @@ def main(unused_argv):
 	segmentNumber = 0.8
 
 	# Load training and eval data
-	dataCreator = TensorFlowDataSetCreator(sc)
-	dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True, segmentNumber = segmentNumber)
-	train_data = dataset.getTrainingData()
-	train_labels = dataset.getTrainingLabels()
-	eval_data = dataset.getTestingData()
-	eval_labels = dataset.getTestingLabels()
+	#dataCreator = TensorFlowDataSetCreator(sc)
+	#dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True, segmentNumber = segmentNumber)
+	
+	train_data = np.load("../cnn_finetune/X_train_56_blocksize_3_channel_size224.npy")
+    train_labels = np.load("../cnn_finetune/Y_train_56_blocksize_3_channel_size224.npy")
+    eval_data = np.load("../cnn_finetune/X_valid_56_blocksize_3_channel_size224.npy")
+    eval_labels = np.load("../cnn_finetune/Y_valid_56_blocksize_3_channel_size224.npy")
+
+	#train_data = dataset.getTrainingData()
+	#train_labels = dataset.getTrainingLabels()
+	#eval_data = dataset.getTestingData()
+	#eval_labels = dataset.getTestingLabels()
 
 	# Create the Estimator
 	mnist_classifier = tf.estimator.Estimator(
