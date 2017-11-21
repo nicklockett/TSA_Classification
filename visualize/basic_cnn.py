@@ -15,6 +15,7 @@ block_size = 224
 
 def main(unused_argv):
 
+	print 'here!'
 	# Set up tools needed
 	sc = SupervisedClassifier('../../stage1_labels.csv')
 
@@ -34,6 +35,9 @@ def main(unused_argv):
 	print 'loaded'
 	eval_labels = np.load("../cnn_finetune/Y_valid_56_blocksize_3_channel_size224.npy")
 	print 'loaded'
+
+	print type(train_data[0])
+	print type(train_data[0][0])
 
 	#train_data = dataset.getTrainingData()
 	#train_labels = dataset.getTrainingLabels()
