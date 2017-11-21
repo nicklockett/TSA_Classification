@@ -33,9 +33,10 @@ def main(unused_argv):
 	eval_labels = np.load("../cnn_finetune/Y_valid_56_blocksize_3_channel_size224.npy")
 	print('loaded')
 
-	print(type(train_data[0]))
-	print(type(train_data[0][0]))
-	print(type(train_data[0][0][0]))
+	print(type(train_data[0])) # gets a block
+	print(type(train_data[0][0])) # gets a block channel (?)
+	print(type(train_data[0][0][0])) # get
+	print(type(train_data[0][0][0][0])) # get
 
 	#train_data = dataset.getTrainingData()
 	#train_labels = dataset.getTrainingLabels()
