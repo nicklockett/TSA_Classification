@@ -11,7 +11,7 @@ from tf_dataset_creator import *
 from random import shuffle
 
 tf.logging.set_verbosity(tf.logging.INFO)
-block_size = 50
+block_size = 224
 
 def main(unused_argv):
 
@@ -38,7 +38,7 @@ def main(unused_argv):
 
 	# Create the Estimator
 	mnist_classifier = tf.estimator.Estimator(
-	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_11")
+	    model_fn=cnn_model_fn, model_dir="../cnn_model_output_1")
 
 	# Set up logging for predictions
 	tensors_to_log = {"probabilities": "softmax_tensor"}
