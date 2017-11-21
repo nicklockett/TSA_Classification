@@ -15,29 +15,26 @@ block_size = 224
 
 def main(unused_argv):
 
-	print 'here!'
-	# Set up tools needed
-	sc = SupervisedClassifier('../../stage1_labels.csv')
-
-
 	# Set segmentNumber
 	segmentNumber = 0.8
+
+	print('here!')
 
 	# Load training and eval data
 	#dataCreator = TensorFlowDataSetCreator(sc)
 	#dataset = dataCreator.CreateTensorFlowDataSetFromBlockStream(block_size = block_size, augment = True, segmentNumber = segmentNumber)
 	
 	train_data = np.load("../cnn_finetune/X_train_56_blocksize_3_channel_size224.npy")
-	print 'loaded'
+	print('loaded')
 	train_labels = np.load("../cnn_finetune/Y_train_56_blocksize_3_channel_size224.npy")
-	print 'loaded'
+	print('loaded')
 	eval_data = np.load("../cnn_finetune/X_valid_56_blocksize_3_channel_size224.npy")
-	print 'loaded'
+	print('loaded')
 	eval_labels = np.load("../cnn_finetune/Y_valid_56_blocksize_3_channel_size224.npy")
-	print 'loaded'
+	print('loaded')
 
-	print type(train_data[0])
-	print type(train_data[0][0])
+	print(type(train_data[0]))
+	print(type(train_data[0][0]))
 
 	#train_data = dataset.getTrainingData()
 	#train_labels = dataset.getTrainingLabels()
