@@ -57,7 +57,7 @@ def main(unused_argv):
 	train_input_fn = tf.estimator.inputs.numpy_input_fn(
 	    x={"x": train_data},
 	    y=train_labels,
-	    batch_size=100, 
+	    batch_size=100,
 	    num_epochs=None,
 	    shuffle=True)
 	mnist_classifier.train(
@@ -148,7 +148,7 @@ def cnn_model_fn(features, labels, mode):
 	# Configure the Training Op (for TRAIN mode)
 	# QUESTION: why does this training happen later?
 	if mode == tf.estimator.ModeKeys.TRAIN:
-		optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001) # Was previously .001
+		optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
 		train_op = optimizer.minimize(
 		    loss=loss,
 		    global_step=tf.train.get_global_step())

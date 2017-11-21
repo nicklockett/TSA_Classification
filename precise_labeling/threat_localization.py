@@ -2,12 +2,13 @@ import sys
 sys.path.insert(0, '../visualize/')
 
 def main(argv):
-	if len(argv) != 3:
+	if len(argv) != 2:
 		print("Please input the file id and region.")
 	else:
-		file1_directory = "xyfiles/"+argv[1]+"_xy_"+argv[2]+".txt"
-		file2_directory = "xyfiles/"+argv[1]+"_xy_"+argv[2]+"_slice.txt"
-		print(file1_directory)
+		words = argv[1].split('_')
+
+		file1_directory = "xyfiles/"+words[0]+"_xy_"+words[2]+".txt"
+		file2_directory = "zfiles/"+words[0]+"_xy_"+words[2]+"_slice.txt"
 
 		file1 = open(file1_directory, "r")
 		file1_points = file1.readlines()
