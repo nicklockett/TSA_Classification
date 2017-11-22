@@ -15,6 +15,8 @@ nb_phase_two_epoch = 20
 nb_classes = 2
 heavy_augmentation = False
 
+datagen = ImageDataGenerator()
+
 # Load Data
 X_train = np.load("../cnn_finetune/X_train_56_blocksize_3_channel_size224.npy")
 print('loaded')
@@ -30,6 +32,9 @@ print('loaded')
 Y_train = keras.utils.to_categorical(np.random.randint(2, size=(1000, 1)), num_classes=2)
 X_valid = np.random.random((200, n, n, 3))
 Y_valid = keras.utils.to_categorical(np.random.randint(2, size=(200, 1)), num_classes=2)"""
+
+#datagen = ImageDataGenerator()
+#datagen.fit(X_train)
 
 """if heavy_augmentation:
     datagen = ImageDataGenerator(
