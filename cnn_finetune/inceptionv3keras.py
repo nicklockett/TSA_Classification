@@ -31,7 +31,7 @@ Y_train = keras.utils.to_categorical(np.random.randint(2, size=(1000, 1)), num_c
 X_valid = np.random.random((200, n, n, 3))
 Y_valid = keras.utils.to_categorical(np.random.randint(2, size=(200, 1)), num_classes=2)"""
 
-if heavy_augmentation:
+"""if heavy_augmentation:
     datagen = ImageDataGenerator(
         featurewise_center=False,
         samplewise_center=False,
@@ -60,7 +60,7 @@ else:
         vertical_flip=False,
         fill_mode='nearest')
 
-datagen.fit(X_train)
+datagen.fit(X_train)"""
 
 # create the base pre-trained model
 base_model = InceptionV3(weights='imagenet', include_top=False)
